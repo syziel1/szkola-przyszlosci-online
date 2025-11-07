@@ -62,6 +62,27 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['platnosci']['Row'], 'id' | 'created_at' | 'created_by'>;
         Update: Partial<Database['public']['Tables']['platnosci']['Insert']>;
       };
+      auth_settings: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+          enable_2fa: boolean;
+          session_timeout_minutes: number;
+          require_password_change: boolean;
+          last_password_change: string | null;
+          failed_login_attempts: number;
+          account_locked_until: string | null;
+          email_notifications: boolean;
+          login_notification: boolean;
+          allowed_ip_addresses: string[] | null;
+          security_questions_set: boolean;
+          backup_email: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['auth_settings']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['auth_settings']['Insert']>;
+      };
     };
   };
 };
