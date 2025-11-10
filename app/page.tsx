@@ -7,6 +7,29 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/lib/auth-context';
 import { ExternalLink } from 'lucide-react';
 
+const projects = [
+  {
+    name: 'Edu Future',
+    url: 'https://edu-future.online/',
+    description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
+  },
+  {
+    name: 'SkillsCan AI',
+    url: 'https://skillscanai.online/',
+    description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
+  },
+  {
+    name: 'Zrozoom AI',
+    url: 'https://www.zrozoomai.pl/',
+    description: 'Warsztaty i wiedza o sztucznej inteligencji.'
+  },
+  {
+    name: 'Matma Base44',
+    url: 'https://matma.base44.app/',
+    description: 'Ćwiczenia i materiały z matematyki online.'
+  },
+];
+
 export default function Home() {
   const { user, loading } = useAuth();
 
@@ -93,6 +116,9 @@ export default function Home() {
             {projects.map((p) => {
               // Rotacja co 6 godzin (21600000 ms)
               const fresh = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+              const domain = new URL(p.url).hostname;
+              const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
+              const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
               const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
               const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=128`;
               return (
@@ -103,6 +129,7 @@ export default function Home() {
                       <a
                         href={p.url}
                         target="_blank"
+                        rel="noopener noreferrer"
                         rel="noreferrer"
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
@@ -125,7 +152,15 @@ export default function Home() {
                         className="w-full h-full object-cover rounded-md border"
                         onError={(e) => {
                           const img = e.currentTarget as HTMLImageElement;
-                          const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=128`;
+                          // Prevent infinite loop by checking if we're already showing the fallback
+                          if (img.src !== faviconUrl) {
+                            img.src = faviconUrl;
+                            img.alt = `${p.name} logo`;
+                            img.style.objectFit = 'contain';
+                            img.style.width = '4rem';
+                            img.style.height = '4rem';
+                            img.style.margin = '0.75rem';
+                          }
                           img.src = faviconUrl;
                           img.alt = `${p.name} logo`;
                           img.className = 'w-16 h-16 object-contain rounded border m-3';
