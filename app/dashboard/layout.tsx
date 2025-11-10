@@ -2,17 +2,19 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, Users, Calendar, Settings, Shield, UserCog, LogOut } from 'lucide-react';
+import { GraduationCap, Users, Calendar, Shield, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, signOut } = useAuth();
   const { canManageUsers, canViewStudentsMenu, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navLinksId = 'dashboard-navigation-links';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -35,6 +37,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const navContainerClasses = `flex flex-col md:flex-row md:items-center md:space-x-1 transition-all duration-200 md:transition-none w-full md:w-auto ${
+    isMobileMenuOpen
+      ? 'mt-4 space-y-2 max-h-96 opacity-100 pointer-events-auto'
+      : 'mt-0 space-y-0 max-h-0 opacity-0 pointer-events-none overflow-hidden'
+  } md:mt-0 md:space-y-0 md:max-h-none md:opacity-100 md:pointer-events-auto md:overflow-visible`;
+
+  const handleNavClick = () => {
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
   };
 
   const getRoleBadge = () => {
@@ -67,32 +81,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-yellow-300 rounded-full flex items-center justify-center">
-                  <GraduationCap className="w-5 h-5 text-gray-800" />
-                </div>
-                <span className="text-xl font-semibold text-gray-900">Baza Uczniów</span>
-              </Link>
-              <div className="hidden md:flex space-x-1">
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-0 py-4 md:py-0">
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
+              <div className="flex items-center justify-between">
+                <Link href="/dashboard" className="flex items-center space-x-2">
+                  <div className="w-10 h-10 bg-yellow-300 rounded-full flex items-center justify-center">
+                    <GraduationCap className="w-5 h-5 text-gray-800" />
+                  </div>
+                  <span className="text-xl font-semibold text-gray-900">Baza Uczniów</span>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-4 md:hidden"
+                  aria-label="Przełącz nawigację"
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls={navLinksId}
+                  onClick={() => setIsMobileMenuOpen((open) => !open)}
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </div>
+              <div id={navLinksId} className={navContainerClasses}>
+                <Link href="/dashboard" onClick={handleNavClick}>
+                  <Button variant="ghost" size="sm" className="justify-start md:justify-center w-full md:w-auto">
                     <Calendar className="w-4 h-4 mr-2" />
                     Kokpit
                   </Button>
                 </Link>
                 {(canViewStudentsMenu || (profile?.role && ['administrator', 'konsultant', 'nauczyciel', 'opiekun'].includes(profile.role))) && (
-                  <Link href="/dashboard/uczniowie">
-                    <Button variant="ghost" size="sm">
+                  <Link href="/dashboard/uczniowie" onClick={handleNavClick}>
+                    <Button variant="ghost" size="sm" className="justify-start md:justify-center w-full md:w-auto">
                       <Users className="w-4 h-4 mr-2" />
                       Uczniowie
                     </Button>
                   </Link>
                 )}
                 {(canManageUsers || profile?.role === 'administrator') && (
-                  <Link href="/dashboard/admin">
-                    <Button variant="ghost" size="sm">
+                  <Link href="/dashboard/admin" onClick={handleNavClick}>
+                    <Button variant="ghost" size="sm" className="justify-start md:justify-center w-full md:w-auto">
                       <Shield className="w-4 h-4 mr-2" />
                       Administracja
                     </Button>
@@ -100,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-end space-x-3">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-sm font-medium text-gray-900">
                   {profile?.full_name || user.email}
