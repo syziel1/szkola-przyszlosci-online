@@ -53,26 +53,24 @@ export default function AdminPage() {
 
   const loadUsers = async () => {
     try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('No session found');
+      }
 
-      if (profilesError) throw profilesError;
-
-      const userIds = profiles?.map((p) => p.user_id) || [];
-
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-
-      const usersWithEmail = profiles?.map((profile) => {
-        const authUser = authUsers?.users.find((u) => u.id === profile.user_id);
-        return {
-          ...profile,
-          email: authUser?.email || 'Unknown',
-        };
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${session.session.access_token}`,
+        },
       });
 
-      setUsers(usersWithEmail || []);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to load users');
+      }
+
+      const { users } = await response.json();
+      setUsers(users);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -89,27 +87,23 @@ export default function AdminPage() {
     e.preventDefault();
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
-        inviteData.email,
-        {
-          data: {
-            full_name: inviteData.full_name,
-          },
-        }
-      );
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('No session found');
+      }
 
-      if (authError) throw authError;
+      const response = await fetch('/api/admin/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.session.access_token}`,
+        },
+        body: JSON.stringify(inviteData),
+      });
 
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .update({
-            role: inviteData.role,
-            full_name: inviteData.full_name,
-          })
-          .eq('user_id', authData.user.id);
-
-        if (profileError) throw profileError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send invitation');
       }
 
       toast({
