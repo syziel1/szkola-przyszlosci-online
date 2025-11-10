@@ -1,0 +1,39 @@
+# Nazwa naszego workflow (pojawi się w zakładce Actions)
+name: Super-Linter
+
+permissions:
+  contents: read
+  statuses: write
+
+# Kiedy ta akcja ma się uruchamiać?
+on:
+  pull_request: # Oraz przy każdym otwarciu/aktualizacji Pull Requesta
+    branches:
+      - main # Celującego w 'main'
+
+# Jakie zadania (joby) ma wykonać?
+jobs:
+  # Nazwa naszego zadania (to jest nazwa "status check")
+  lint-code:
+    # Na jakim systemie ma to uruchomić?
+    runs-on: ubuntu-latest
+
+    # Kroki do wykonania
+    steps:
+      # Krok 1: Pobranie kodu z repozytorium
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Pobierz całą historię, potrzebne do Super-Lintera
+
+      # Krok 2: Uruchomienie Super-Lintera
+      - name: Run Super-Linter
+        uses: github/super-linter@v6 # Używamy gotowej akcji od GitHuba
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: 'false' # Sprawdzaj tylko zmienione pliki w PR
+          VALIDATE_JSCPD: false # Wyłącz sprawdzanie duplikatów kodu (tymczasowo)
+          VALIDATE_TYPESCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów TypeScript (tymczasowo)
+          VALIDATE_CSS: false # Wyłącz sprawdzanie CSS (tymczasowo)
+          VALIDATE_JAVASCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów JavaScript (tymczasowo)

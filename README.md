@@ -25,7 +25,7 @@ Nowoczesny, webowy system zarządzania uczniami i zajęciami dla korepetytorów 
 ## Wymagania
 
 - Node.js 18+ (zalecane LTS)
-- NPM 9+ lub pnpm/yarn
+- npm 9+ lub pnpm/yarn
 - Konto i projekt w Supabase:
   - URL projektu
   - Anon public key
@@ -61,7 +61,7 @@ npm run build
 npm start
 ```
 
-## Skrypty NPM
+## Skrypty npm
 
 - `dev` – uruchamia Next.js w trybie deweloperskim
 - `build` – buduje aplikację
@@ -124,4 +124,4 @@ Token z nagłówka jest weryfikowany przez Supabase (`auth.getUser`), a rola spr
 
 ## Licencja
 
-Dodaj informacje o licencji (np. MIT) lub pozostaw jako „All rights reserved”, jeśli projekt jest zamknięty.
+Copyright (c) 2025 Sylwester Zieliński. All rights reserved.
