@@ -6,9 +6,57 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/lib/auth-context';
 import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const projects = [
+    {
+      name: 'Edu Future',
+      url: 'https://edu-future.online/',
+      description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
+    },
+    {
+      name: 'SkillsCan AI',
+      url: 'https://skillscanai.online/',
+      description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
+    },
+    {
+      name: 'Zrozoom AI',
+      url: 'https://www.zrozoomai.pl/',
+      description: 'Warsztaty i wiedza o sztucznej inteligencji.'
+    },
+    {
+      name: 'Matma Base44',
+      url: 'https://matma.base44.app/',
+      description: 'Ćwiczenia i materiały z matematyki online.'
+    },
+  ];
+
+  const projects = [
+    {
+      name: 'Edu Future',
+      url: 'https://edu-future.online/',
+      description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
+    },
+    {
+      name: 'SkillsCan AI',
+      url: 'https://skillscanai.online/',
+      description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
+    },
+    {
+      name: 'Zrozoom AI',
+      url: 'https://www.zrozoomai.pl/',
+      description: 'Warsztaty i wiedza o sztucznej inteligencji.'
+    },
+    {
+      name: 'Matma Base44',
+      url: 'https://matma.base44.app/',
+      description: 'Ćwiczenia i materiały z matematyki online.'
+    },
+  ];
 
   const projects = [
     {
@@ -110,7 +158,7 @@ export default function Home() {
                       <a
                         href={p.url}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
                         {p.url.replace('https://', '')}
@@ -126,11 +174,19 @@ export default function Home() {
                   <CardContent className="space-y-3">
                     <AspectRatio ratio={16 / 9}>
                       <img
-                        src={screenshotUrl}
-                        alt={`${p.name} wizualizacja`}
+                        src={imageErrors.has(p.url) ? faviconUrl : screenshotUrl}
+                        alt={imageErrors.has(p.url) ? `${p.name} logo` : `${p.name} podgląd strony`}
                         loading="lazy"
-                        className="w-full h-full object-cover rounded-md border"
-                        onError={handleImageError}
+                        className={
+                          imageErrors.has(p.url)
+                            ? 'w-16 h-16 object-contain rounded border m-3'
+                            : 'w-full h-full object-cover rounded-md border'
+                        }
+                        onError={(e) => {
+                          if (!imageErrors.has(p.url)) {
+                            setImageErrors(prev => new Set(prev).add(p.url));
+                          }
+                        }}
                       />
                     </AspectRatio>
                     <p className="text-sm text-gray-600">{p.description}</p>
