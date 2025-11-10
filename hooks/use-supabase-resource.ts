@@ -176,7 +176,7 @@ export function createSupabaseResourceHook<
       } finally {
         setLoading(false);
       }
-    }, [filtersKey, options?.pause]);
+    }, [filtersKey, options?.pause, config.table, config.select, config.orderBy, config.defaultFilters, config.queryModifier, errorMessages.fetch]);
 
     useEffect(() => {
       fetchRecords();
@@ -238,7 +238,7 @@ export function createSupabaseResourceHook<
           };
         }
       },
-      [errorMessages.insert]
+      [config.table, config.autoCreatedBy, errorMessages.insert]
     );
 
     const updateRecord = useCallback(
@@ -261,7 +261,7 @@ export function createSupabaseResourceHook<
           };
         }
       },
-      [errorMessages.update]
+      [config.table, primaryKey, errorMessages.update]
     );
 
     const deleteRecord = useCallback(
@@ -281,7 +281,7 @@ export function createSupabaseResourceHook<
           };
         }
       },
-      [errorMessages.delete]
+      [config.table, primaryKey, errorMessages.delete]
     );
 
     return {
@@ -328,7 +328,7 @@ export function createSupabaseResourceHook<
       } finally {
         setLoading(false);
       }
-    }, [id]);
+    }, [id, config.table, config.select, primaryKey, errorMessages.fetch]);
 
     useEffect(() => {
       fetchRecord();
