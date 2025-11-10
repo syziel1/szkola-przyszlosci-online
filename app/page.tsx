@@ -33,6 +33,29 @@ const projects = [
 export default function Home() {
   const { user, loading } = useAuth();
 
+  const projects = [
+    {
+      name: 'Edu Future',
+      url: 'https://edu-future.online/',
+      description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
+    },
+    {
+      name: 'SkillsCan AI',
+      url: 'https://skillscanai.online/',
+      description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
+    },
+    {
+      name: 'Zrozoom AI',
+      url: 'https://www.zrozoomai.pl/',
+      description: 'Warsztaty i wiedza o sztucznej inteligencji.'
+    },
+    {
+      name: 'Matma Base44',
+      url: 'https://matma.base44.app/',
+      description: 'Ćwiczenia i materiały z matematyki online.'
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header with login top-right */}
@@ -96,6 +119,8 @@ export default function Home() {
               const domain = new URL(p.url).hostname;
               const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
               const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+              const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
+              const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=128`;
               return (
                 <Card key={p.url} className="hover:shadow-md transition-shadow overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
@@ -105,6 +130,7 @@ export default function Home() {
                         href={p.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        rel="noreferrer"
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
                         {p.url.replace('https://', '')}
@@ -135,6 +161,9 @@ export default function Home() {
                             img.style.height = '4rem';
                             img.style.margin = '0.75rem';
                           }
+                          img.src = faviconUrl;
+                          img.alt = `${p.name} logo`;
+                          img.className = 'w-16 h-16 object-contain rounded border m-3';
                         }}
                       />
                     </AspectRatio>
