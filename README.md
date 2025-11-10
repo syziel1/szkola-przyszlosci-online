@@ -124,4 +124,4 @@ Token z nagłówka jest weryfikowany przez Supabase (`auth.getUser`), a rola spr
 
 ## Licencja
 
-2025 All rights reserved
+Copyright (c) 2025 Szkoła Przyszłości Online. All rights reserved.
