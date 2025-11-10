@@ -7,6 +7,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Database = {
   public: {
+    Enums: {
+      subject_enum: 'matematyka' | 'fizyka' | 'informatyka';
+      payment_status_enum: 'oczekuje' | 'zapłacone' | 'zaległe' | 'anulowane';
+      homework_status_enum: 'brak' | 'zadane' | 'oddane' | 'poprawa';
+      owner_type_enum: 'student' | 'class' | 'book' | 'diagnostic';
+      link_kind_enum: 'resource' | 'homework' | 'reference' | 'external';
+    };
     Tables: {
       uczniowie: {
         Row: {
@@ -32,14 +39,14 @@ export type Database = {
           created_at: string;
           created_by: string;
           student_id: string;
-          subject: 'matematyka' | 'fizyka' | 'informatyka';
+          subject: Database['public']['Enums']['subject_enum'];
           start_at: string;
           end_at: string | null;
           temat: string | null;
           zrozumienie: number | null;
           trudnosci: string | null;
           praca_domowa: string | null;
-          status_pd: 'brak' | 'zadane' | 'oddane' | 'poprawa';
+          status_pd: Database['public']['Enums']['homework_status_enum'];
         };
         Insert: Omit<Database['public']['Tables']['zajecia']['Row'], 'id' | 'created_at' | 'created_by'>;
         Update: Partial<Database['public']['Tables']['zajecia']['Insert']>;
@@ -55,12 +62,81 @@ export type Database = {
           kwota: number;
           waluta: string;
           metoda: string | null;
-          status: 'oczekuje' | 'zapłacone' | 'zaległe' | 'anulowane';
+          status: Database['public']['Enums']['payment_status_enum'];
           notatki: string | null;
           invoice_url: string | null;
         };
         Insert: Omit<Database['public']['Tables']['platnosci']['Row'], 'id' | 'created_at' | 'created_by'>;
         Update: Partial<Database['public']['Tables']['platnosci']['Insert']>;
+      };
+      diagnozy: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          student_id: string;
+          subject: Database['public']['Enums']['subject_enum'];
+          data_testu: string;
+          narzedzie: string | null;
+          wynik: number | null;
+          rubric: Record<string, any> | null;
+          wnioski: string | null;
+          cele: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['diagnozy']['Row'], 'id' | 'created_at' | 'created_by'>;
+        Update: Partial<Database['public']['Tables']['diagnozy']['Insert']>;
+      };
+      ksiazki: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          wydawnictwo: string | null;
+          tytul: string;
+          url: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['ksiazki']['Row'], 'id' | 'created_at' | 'created_by'>;
+        Update: Partial<Database['public']['Tables']['ksiazki']['Insert']>;
+      };
+      linki: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          owner_type: Database['public']['Enums']['owner_type_enum'];
+          owner_id: string | null;
+          kind: Database['public']['Enums']['link_kind_enum'];
+          url: string;
+          label: string | null;
+          metadata: Record<string, any> | null;
+        };
+        Insert: Omit<Database['public']['Tables']['linki']['Row'], 'id' | 'created_at' | 'created_by'>;
+        Update: Partial<Database['public']['Tables']['linki']['Insert']>;
+      };
+      przedmiot_ucznia: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          student_id: string;
+          subject: Database['public']['Enums']['subject_enum'];
+          notatki: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['przedmiot_ucznia']['Row'], 'id' | 'created_at' | 'created_by'>;
+        Update: Partial<Database['public']['Tables']['przedmiot_ucznia']['Insert']>;
+      };
+      uczen_ksiazka: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          student_id: string;
+          ksiazka_id: string;
+          subject: Database['public']['Enums']['subject_enum'] | null;
+          unikalne: boolean;
+        };
+        Insert: Omit<Database['public']['Tables']['uczen_ksiazka']['Row'], 'id' | 'created_at' | 'created_by'>;
+        Update: Partial<Database['public']['Tables']['uczen_ksiazka']['Insert']>;
       };
       auth_settings: {
         Row: {
