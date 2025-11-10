@@ -80,10 +80,7 @@ export default function UczniwowiePage() {
       if (role === 'administrator' || role === 'konsultant') {
         const { data, error } = await supabase
           .from('uczniowie')
-          .select(`
-            *,
-            user_profiles!uczniowie_created_by_fkey(full_name)
-          `)
+          .select('*')
           .order('nazwisko', { ascending: true });
 
         if (error) throw error;
@@ -91,6 +88,14 @@ export default function UczniwowiePage() {
         if (data) {
           const studentsWithDetails = await Promise.all(
             data.map(async (student: any) => {
+              // Get tutor name from user_profiles
+              const { data: profileData } = await supabase
+                .from('user_profiles')
+                .select('full_name')
+                .eq('user_id', student.created_by)
+                .maybeSingle();
+
+              // Get guardian count
               const { count } = await supabase
                 .from('student_guardians')
                 .select('*', { count: 'exact', head: true })
@@ -98,7 +103,7 @@ export default function UczniwowiePage() {
 
               return {
                 ...student,
-                tutor_name: student.user_profiles?.full_name || 'Nieznany',
+                tutor_name: profileData?.full_name || 'Nieznany',
                 guardian_count: count || 0,
               };
             })
@@ -129,8 +134,7 @@ export default function UczniwowiePage() {
               telefon,
               szkola,
               klasa,
-              created_by,
-              user_profiles!uczniowie_created_by_fkey(full_name)
+              created_by
             )
           `)
           .eq('guardian_user_id', user.id);
@@ -138,10 +142,22 @@ export default function UczniwowiePage() {
         if (error) throw error;
 
         if (data) {
-          studentsData = data.map((item: any) => ({
-            ...item.uczniowie,
-            tutor_name: item.uczniowie.user_profiles?.full_name || 'Nieznany',
-          }));
+          const studentsWithTutorNames = await Promise.all(
+            data.map(async (item: any) => {
+              // Get tutor name from user_profiles
+              const { data: profileData } = await supabase
+                .from('user_profiles')
+                .select('full_name')
+                .eq('user_id', item.uczniowie.created_by)
+                .maybeSingle();
+
+              return {
+                ...item.uczniowie,
+                tutor_name: profileData?.full_name || 'Nieznany',
+              };
+            })
+          );
+          studentsData = studentsWithTutorNames;
           studentsData.sort((a, b) => a.nazwisko.localeCompare(b.nazwisko));
         }
       }

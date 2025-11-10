@@ -83,21 +83,24 @@ export default function StudentDetailPage() {
           .from('student_guardians')
           .select(`
             id,
-            guardian_user_id,
-            user_profiles!student_guardians_guardian_user_id_fkey(
-              full_name,
-              user_id
-            )
+            guardian_user_id
           `)
           .eq('student_id', studentId);
 
         if (guardianData && guardianData.length > 0) {
           const guardiansWithEmail = await Promise.all(
             guardianData.map(async (g: any) => {
+              // Get guardian profile from user_profiles
+              const { data: profileData } = await supabase
+                .from('user_profiles')
+                .select('full_name')
+                .eq('user_id', g.guardian_user_id)
+                .maybeSingle();
+
               const { data: authData } = await supabase.auth.admin.getUserById(g.guardian_user_id);
               return {
                 id: g.id,
-                full_name: g.user_profiles?.full_name || null,
+                full_name: profileData?.full_name || null,
                 email: authData.user?.email || null,
               };
             })
