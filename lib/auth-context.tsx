@@ -47,10 +47,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!error && data) {
       setProfile(data as UserProfile);
 
-      await supabase
-        .from('user_profiles')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('user_id', userId);
     }
   };
 
