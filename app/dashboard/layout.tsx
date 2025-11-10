@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, signOut } = useAuth();
-  const { canManageUsers, canViewStudentsMenu } = usePermissions();
+  const { canManageUsers, canViewStudentsMenu, loading: permissionsLoading } = usePermissions();
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-600">Ładowanie...</div>
@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Kokpit
                   </Button>
                 </Link>
-                {canViewStudentsMenu && (
+                {(canViewStudentsMenu || (profile?.role && ['administrator', 'konsultant', 'nauczyciel', 'opiekun'].includes(profile.role))) && (
                   <Link href="/dashboard/uczniowie">
                     <Button variant="ghost" size="sm">
                       <Users className="w-4 h-4 mr-2" />
@@ -90,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Button>
                   </Link>
                 )}
-                {canManageUsers && (
+                {(canManageUsers || profile?.role === 'administrator') && (
                   <Link href="/dashboard/admin">
                     <Button variant="ghost" size="sm">
                       <Shield className="w-4 h-4 mr-2" />
