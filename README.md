@@ -11,7 +11,6 @@ Nowoczesny, webowy system zarządzania uczniami i zajęciami dla korepetytorów 
 - Next.js 13 (App Router), React 18, TypeScript
 - Tailwind CSS, Radix UI, shadcn/ui, lucide-react
 - Supabase (`@supabase/supabase-js`)
-- date-fns, react-hook-form, zod
 
 ## Kluczowe funkcje
 
