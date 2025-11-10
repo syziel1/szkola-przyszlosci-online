@@ -125,6 +125,7 @@ export default function Home() {
                         className="w-full h-full object-cover rounded-md border"
                         onError={(e) => {
                           const img = e.currentTarget as HTMLImageElement;
+                          const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=128`;
                           img.src = faviconUrl;
                           img.alt = `${p.name} logo`;
                           img.className = 'w-16 h-16 object-contain rounded border m-3';
