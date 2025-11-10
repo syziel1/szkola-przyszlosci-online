@@ -95,7 +95,9 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {projects.map((p) => {
-              const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}`;
+              // Rotacja co 6 godzin (21600000 ms)
+              const fresh = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+              const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
               const faviconUrl = `https://www.google.com/s2/favicons?domain=${p.domain}&sz=128`;
               return (
                 <Card key={p.url} className="hover:shadow-md transition-shadow overflow-hidden">
