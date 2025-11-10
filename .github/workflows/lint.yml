@@ -22,6 +22,8 @@ jobs:
       # Krok 1: Pobranie kodu z repozytorium
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Pobierz całą historię, potrzebne do Super-Lintera
 
       # Krok 2: Uruchomienie Super-Lintera
       - name: Run Super-Linter
