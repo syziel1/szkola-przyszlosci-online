@@ -14,25 +14,21 @@ export default function Home() {
     {
       name: 'Edu Future',
       url: 'https://edu-future.online/',
-      domain: 'edu-future.online',
       description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
     },
     {
       name: 'SkillsCan AI',
       url: 'https://skillscanai.online/',
-      domain: 'skillscanai.online',
       description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
     },
     {
       name: 'Zrozoom AI',
       url: 'https://www.zrozoomai.pl/',
-      domain: 'zrozoomai.pl',
       description: 'Warsztaty i wiedza o sztucznej inteligencji.'
     },
     {
       name: 'Matma Base44',
       url: 'https://matma.base44.app/',
-      domain: 'matma.base44.app',
       description: 'Ćwiczenia i materiały z matematyki online.'
     },
   ];
