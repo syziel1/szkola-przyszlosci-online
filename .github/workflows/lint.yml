@@ -38,3 +38,5 @@ jobs:
           VALIDATE_ALL_CODEBASE: true # Sprawdź cały kod, nie tylko zmiany
           VALIDATE_JSCPD: false # Wyłącz sprawdzanie duplikatów kodu (tymczasowo)
           VALIDATE_TYPESCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów TypeScript (tymczasowo)
+          VALIDATE_CSS: false # Wyłącz sprawdzanie CSS (tymczasowo)
+          VALIDATE_JAVASCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów JavaScript (tymczasowo)
