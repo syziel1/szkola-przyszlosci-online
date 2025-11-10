@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,29 +12,17 @@ import { Plus, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { useClasses } from '@/hooks/use-classes';
 
 interface ZajeciaTabProps {
   studentId: string;
   studentName: string;
 }
 
-interface Zajecie {
-  id: string;
-  start_at: string;
-  end_at: string | null;
-  temat: string | null;
-  subject: string;
-  zrozumienie: number | null;
-  trudnosci: string | null;
-  praca_domowa: string | null;
-  status_pd: string;
-}
-
 export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
-  const [zajecia, setZajecia] = useState<Zajecie[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { classes: zajecia, loading, addClass } = useClasses(studentId);
 
   const [formData, setFormData] = useState({
     subject: 'matematyka' as 'matematyka' | 'fizyka' | 'informatyka',
@@ -48,44 +35,25 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
     status_pd: 'brak' as 'brak' | 'zadane' | 'oddane' | 'poprawa',
   });
 
-  useEffect(() => {
-    loadZajecia();
-  }, [studentId]);
-
-  const loadZajecia = async () => {
-    const { data, error } = await supabase
-      .from('zajecia')
-      .select('*')
-      .eq('student_id', studentId)
-      .order('start_at', { ascending: false });
-
-    if (!error && data) {
-      setZajecia(data);
-    }
-    setLoading(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { error } = await supabase.from('zajecia').insert([
-      {
-        student_id: studentId,
-        subject: formData.subject,
-        start_at: formData.start_at,
-        end_at: formData.end_at || null,
-        temat: formData.temat || null,
-        zrozumienie: formData.zrozumienie ? parseInt(formData.zrozumienie) : null,
-        trudnosci: formData.trudnosci || null,
-        praca_domowa: formData.praca_domowa || null,
-        status_pd: formData.status_pd,
-      },
-    ]);
+    const { error } = await addClass({
+      student_id: studentId,
+      subject: formData.subject,
+      start_at: formData.start_at,
+      end_at: formData.end_at || null,
+      temat: formData.temat || null,
+      zrozumienie: formData.zrozumienie ? parseInt(formData.zrozumienie) : null,
+      trudnosci: formData.trudnosci || null,
+      praca_domowa: formData.praca_domowa || null,
+      status_pd: formData.status_pd,
+    });
 
     if (error) {
       toast({
         title: 'Błąd',
-        description: error.message,
+        description: error,
         variant: 'destructive',
       });
     } else {
@@ -104,7 +72,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
         praca_domowa: '',
         status_pd: 'brak',
       });
-      loadZajecia();
     }
   };
 
