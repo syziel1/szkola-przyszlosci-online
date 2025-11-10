@@ -35,7 +35,7 @@ jobs:
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true # Sprawdź cały kod, nie tylko zmiany
+          VALIDATE_ALL_CODEBASE: ${{ github.ref == 'refs/heads/main' }} # Sprawdź cały kod tylko na 'main', inaczej tylko zmiany
           VALIDATE_JSCPD: false # Wyłącz sprawdzanie duplikatów kodu (tymczasowo)
           VALIDATE_TYPESCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów TypeScript (tymczasowo)
           VALIDATE_CSS: false # Wyłącz sprawdzanie CSS (tymczasowo)
