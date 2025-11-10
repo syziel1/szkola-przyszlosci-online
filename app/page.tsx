@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/lib/auth-context';
 import { ExternalLink } from 'lucide-react';
 
@@ -93,40 +94,48 @@ export default function Home() {
             <p className="text-sm text-gray-500">Poznaj nasze inicjatywy i narzędzia</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {projects.map((p) => (
-              <Card key={p.url} className="hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                  {/* Favicon thumbnail */}
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${p.domain}&sz=128`}
-                    alt={`${p.name} favicon`}
-                    width={32}
-                    height={32}
-                    className="rounded"
-                  />
-                  <div className="flex-1">
-                    <CardTitle className="text-base font-semibold text-gray-900">{p.name}</CardTitle>
-                    <a
-                      href={p.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      {p.url.replace('https://', '')}
+            {projects.map((p) => {
+              const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}`;
+              const faviconUrl = `https://www.google.com/s2/favicons?domain=${p.domain}&sz=128`;
+              return (
+                <Card key={p.url} className="hover:shadow-md transition-shadow overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base font-semibold text-gray-900 truncate">{p.name}</CardTitle>
+                      <a
+                        href={p.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-blue-600 hover:underline break-all"
+                      >
+                        {p.url.replace('https://', '')}
+                      </a>
+                    </div>
+                    <a href={p.url} target="_blank" rel="noreferrer">
+                      <Button size="sm" variant="outline" className="gap-1">
+                        <ExternalLink className="w-4 h-4" />
+                        Zobacz
+                      </Button>
                     </a>
-                  </div>
-                  <a href={p.url} target="_blank" rel="noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1">
-                      <ExternalLink className="w-4 h-4" />
-                      Zobacz
-                    </Button>
-                  </a>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600">{p.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <AspectRatio ratio={16 / 9}>
+                      <img
+                        src={screenshotUrl}
+                        alt={`${p.name} podgląd strony`}
+                        loading="lazy"
+                        className="w-full h-full object-cover rounded-md border"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = faviconUrl;
+                          (e.currentTarget as HTMLImageElement).className = 'w-16 h-16 object-contain rounded border m-3';
+                        }}
+                      />
+                    </AspectRatio>
+                    <p className="text-sm text-gray-600">{p.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </section>
       </main>
