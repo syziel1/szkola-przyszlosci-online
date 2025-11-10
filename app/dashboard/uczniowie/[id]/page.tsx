@@ -65,15 +65,14 @@ export default function StudentDetailPage() {
       if (isAdminOrKonsultant || role === 'opiekun') {
         const { data: tutorData } = await supabase
           .from('user_profiles')
-          .select('full_name, user_id')
+          .select('full_name')
           .eq('user_id', data.created_by)
           .maybeSingle();
 
         if (tutorData) {
-          const { data: authData } = await supabase.auth.admin.getUserById(tutorData.user_id);
           setTutorInfo({
             full_name: tutorData.full_name,
-            email: authData.user?.email || null,
+            email: null,
           });
         }
       }
@@ -97,11 +96,10 @@ export default function StudentDetailPage() {
                 .eq('user_id', g.guardian_user_id)
                 .maybeSingle();
 
-              const { data: authData } = await supabase.auth.admin.getUserById(g.guardian_user_id);
               return {
                 id: g.id,
                 full_name: profileData?.full_name || null,
-                email: authData.user?.email || null,
+                email: null,
               };
             })
           );
