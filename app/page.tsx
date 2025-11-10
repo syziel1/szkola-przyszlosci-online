@@ -128,7 +128,7 @@ export default function Home() {
                       <a
                         href={p.url}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
                         {p.url.replace('https://', '')}
