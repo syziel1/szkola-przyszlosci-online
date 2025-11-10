@@ -3,12 +3,15 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { usePermissions } from '@/hooks/use-permissions';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Users, Calendar, DollarSign, LogOut } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GraduationCap, Users, Calendar, Settings, Shield, UserCog, LogOut } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
+  const { canManageUsers, isStaff } = usePermissions();
   const router = useRouter();
 
   useEffect(() => {
@@ -34,6 +37,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login');
   };
 
+  const getRoleBadge = () => {
+    if (!profile?.role) return null;
+
+    const roleLabels: Record<string, string> = {
+      administrator: 'Administrator',
+      konsultant: 'Konsultant',
+      nauczyciel: 'Nauczyciel',
+      opiekun: 'Opiekun',
+      uczen: 'Uczeń',
+    };
+
+    const roleColors: Record<string, string> = {
+      administrator: 'bg-red-100 text-red-800',
+      konsultant: 'bg-blue-100 text-blue-800',
+      nauczyciel: 'bg-green-100 text-green-800',
+      opiekun: 'bg-purple-100 text-purple-800',
+      uczen: 'bg-gray-100 text-gray-800',
+    };
+
+    return (
+      <Badge className={`${roleColors[profile.role]} border-0`}>
+        {roleLabels[profile.role] || profile.role}
+      </Badge>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200">
@@ -53,16 +82,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Kokpit
                   </Button>
                 </Link>
-                <Link href="/dashboard/uczniowie">
-                  <Button variant="ghost" size="sm">
-                    <Users className="w-4 h-4 mr-2" />
-                    Uczniowie
-                  </Button>
-                </Link>
+                {isStaff && (
+                  <Link href="/dashboard/uczniowie">
+                    <Button variant="ghost" size="sm">
+                      <Users className="w-4 h-4 mr-2" />
+                      Uczniowie
+                    </Button>
+                  </Link>
+                )}
+                {canManageUsers && (
+                  <Link href="/dashboard/admin">
+                    <Button variant="ghost" size="sm">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Administracja
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 hidden sm:inline">{user.email}</span>
+            <div className="flex items-center space-x-3">
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-sm font-medium text-gray-900">
+                  {profile?.full_name || user.email}
+                </span>
+                {getRoleBadge()}
+              </div>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Wyloguj

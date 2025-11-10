@@ -77,7 +77,22 @@ export default function UczniwowiePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { error } = await supabase.from('uczniowie').insert([formData]);
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      toast({
+        title: 'Błąd',
+        description: 'Musisz być zalogowany',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('uczniowie').insert([
+      {
+        ...formData,
+        created_by: userData.user.id,
+      }
+    ]);
 
     if (error) {
       toast({

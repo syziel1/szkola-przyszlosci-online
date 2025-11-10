@@ -13,6 +13,7 @@ export type Database = {
       homework_status_enum: 'brak' | 'zadane' | 'oddane' | 'poprawa';
       owner_type_enum: 'student' | 'class' | 'book' | 'diagnostic';
       link_kind_enum: 'resource' | 'homework' | 'reference' | 'external';
+      user_role_enum: 'administrator' | 'konsultant' | 'nauczyciel' | 'opiekun' | 'uczen';
     };
     Tables: {
       uczniowie: {
@@ -158,6 +159,61 @@ export type Database = {
         };
         Insert: Omit<Database['public']['Tables']['auth_settings']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['auth_settings']['Insert']>;
+      };
+      user_profiles: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+          role: Database['public']['Enums']['user_role_enum'];
+          full_name: string | null;
+          phone: string | null;
+          avatar_url: string | null;
+          bio: string | null;
+          is_active: boolean;
+          metadata: Record<string, any> | null;
+          last_login_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['user_profiles']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['user_profiles']['Insert']>;
+      };
+      student_guardians: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          guardian_user_id: string;
+          student_id: string;
+        };
+        Insert: Omit<Database['public']['Tables']['student_guardians']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['student_guardians']['Insert']>;
+      };
+      student_user_mapping: {
+        Row: {
+          id: string;
+          created_at: string;
+          created_by: string;
+          student_user_id: string;
+          student_id: string;
+        };
+        Insert: Omit<Database['public']['Tables']['student_user_mapping']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['student_user_mapping']['Insert']>;
+      };
+      audit_log: {
+        Row: {
+          id: string;
+          created_at: string;
+          user_id: string | null;
+          action: string;
+          table_name: string | null;
+          record_id: string | null;
+          old_values: Record<string, any> | null;
+          new_values: Record<string, any> | null;
+          ip_address: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['audit_log']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['audit_log']['Insert']>;
       };
     };
   };
