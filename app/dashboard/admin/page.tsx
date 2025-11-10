@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, Shield, Search } from 'lucide-react';
+import { Users, UserPlus, Shield, Search, Edit, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 
 interface UserProfile {
   id: string;
@@ -35,10 +36,18 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const [inviteData, setInviteData] = useState({
     email: '',
     full_name: '',
     role: 'nauczyciel',
+  });
+  const [profileData, setProfileData] = useState({
+    full_name: '',
+    phone: '',
+    bio: '',
   });
 
   useEffect(() => {
@@ -123,31 +132,22 @@ export default function AdminPage() {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ role: newRole })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Sukces',
-        description: 'Rola użytkownika została zmieniona',
-      });
-
-      loadUsers();
-    } catch (error: any) {
-      toast({
-        title: 'Błąd',
-        description: error.message || 'Nie udało się zmienić roli',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
+    // Check if this is the only administrator
+    if (!currentStatus === false) { // If we're trying to deactivate
+      const activeAdmins = users.filter(u => u.role === 'administrator' && u.is_active && u.user_id !== userId);
+      const targetUser = users.find(u => u.user_id === userId);
+      
+      if (targetUser?.role === 'administrator' && activeAdmins.length === 0) {
+        toast({
+          title: 'Błąd',
+          description: 'Nie można dezaktywować jedynego administratora',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     try {
       const { error } = await supabase
         .from('user_profiles')
@@ -166,6 +166,60 @@ export default function AdminPage() {
       toast({
         title: 'Błąd',
         description: error.message || 'Nie udało się zmienić statusu',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewProfile = (user: UserProfile) => {
+    setSelectedUser(user);
+    setProfileData({
+      full_name: user.full_name || '',
+      phone: user.phone || '',
+      bio: user.bio || '',
+    });
+    setEditMode(false);
+    setProfileDialogOpen(true);
+  };
+
+  const handleEditProfile = (user: UserProfile) => {
+    setSelectedUser(user);
+    setProfileData({
+      full_name: user.full_name || '',
+      phone: user.phone || '',
+      bio: user.bio || '',
+    });
+    setEditMode(true);
+    setProfileDialogOpen(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: profileData.full_name || null,
+          phone: profileData.phone || null,
+          bio: profileData.bio || null,
+        })
+        .eq('user_id', selectedUser.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sukces',
+        description: 'Profil został zaktualizowany',
+      });
+
+      setProfileDialogOpen(false);
+      loadUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Błąd',
+        description: error.message || 'Nie udało się zaktualizować profilu',
         variant: 'destructive',
       });
     }
@@ -357,19 +411,9 @@ export default function AdminPage() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Select
-                        value={user.role}
-                        onValueChange={(value) => handleRoleChange(user.user_id, value)}
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="administrator">Administrator</SelectItem>
-                          <SelectItem value="konsultant">Konsultant</SelectItem>
-                          <SelectItem value="nauczyciel">Nauczyciel</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
+                        {getRoleLabel(user.role)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? 'default' : 'secondary'}>
@@ -382,13 +426,31 @@ export default function AdminPage() {
                         : 'Nigdy'}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(user.user_id, user.is_active)}
-                      >
-                        {user.is_active ? 'Dezaktywuj' : 'Aktywuj'}
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewProfile(user)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Podgląd
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditProfile(user)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edytuj
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(user.user_id, user.is_active)}
+                        >
+                          {user.is_active ? 'Dezaktywuj' : 'Aktywuj'}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -397,6 +459,110 @@ export default function AdminPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Profile Dialog */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editMode ? 'Edytuj Profil' : 'Podgląd Profilu'} - {selectedUser?.full_name || selectedUser?.email}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="profile_email">Email</Label>
+                  <Input
+                    id="profile_email"
+                    value={selectedUser.email || ''}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="profile_role">Rola</Label>
+                  <Input
+                    id="profile_role"
+                    value={getRoleLabel(selectedUser.role)}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="profile_full_name">Imię i Nazwisko</Label>
+                <Input
+                  id="profile_full_name"
+                  value={profileData.full_name}
+                  onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                  disabled={!editMode}
+                  className={!editMode ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile_phone">Telefon</Label>
+                <Input
+                  id="profile_phone"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  disabled={!editMode}
+                  className={!editMode ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile_bio">Bio</Label>
+                <Textarea
+                  id="profile_bio"
+                  value={profileData.bio}
+                  onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                  disabled={!editMode}
+                  className={!editMode ? 'bg-gray-50' : ''}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Status</Label>
+                  <div className="mt-2">
+                    <Badge variant={selectedUser.is_active ? 'default' : 'secondary'}>
+                      {selectedUser.is_active ? 'Aktywny' : 'Nieaktywny'}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label>Ostatnie Logowanie</Label>
+                  <p className="mt-2 text-sm text-gray-600">
+                    {selectedUser.last_login_at
+                      ? new Date(selectedUser.last_login_at).toLocaleDateString('pl-PL')
+                      : 'Nigdy'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setProfileDialogOpen(false)}>
+                  {editMode ? 'Anuluj' : 'Zamknij'}
+                </Button>
+                {editMode && (
+                  <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                    Zapisz Zmiany
+                  </Button>
+                )}
+                {!editMode && (
+                  <Button 
+                    type="button" 
+                    onClick={() => setEditMode(true)}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edytuj
+                  </Button>
+                )}
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
