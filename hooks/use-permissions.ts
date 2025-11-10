@@ -201,6 +201,11 @@ export function usePermissions() {
     return ['administrator', 'konsultant'].includes(role);
   };
 
+  const canViewStudentsMenu = () => {
+    if (!role) return false;
+    return ['administrator', 'konsultant', 'nauczyciel', 'opiekun'].includes(role);
+  };
+
   return {
     role,
     loading,
@@ -217,5 +222,6 @@ export function usePermissions() {
     canCreateStudentAccounts: canCreateStudentAccounts(),
     isStaff: isStaff(),
     isAdminOrKonsultant: isAdminOrKonsultant(),
+    canViewStudentsMenu: canViewStudentsMenu(),
   };
 }

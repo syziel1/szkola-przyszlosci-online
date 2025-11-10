@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, signOut } = useAuth();
-  const { canManageUsers, isStaff } = usePermissions();
+  const { canManageUsers, canViewStudentsMenu } = usePermissions();
   const router = useRouter();
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Kokpit
                   </Button>
                 </Link>
-                {isStaff && (
+                {canViewStudentsMenu && (
                   <Link href="/dashboard/uczniowie">
                     <Button variant="ghost" size="sm">
                       <Users className="w-4 h-4 mr-2" />

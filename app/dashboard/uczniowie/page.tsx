@@ -5,12 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Search, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Search, User, UserCheck, Users as UsersIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useAuth } from '@/lib/auth-context';
 
 interface Student {
   id: string;
@@ -20,6 +23,9 @@ interface Student {
   telefon: string | null;
   szkola: string | null;
   klasa: string | null;
+  created_by: string;
+  tutor_name?: string;
+  guardian_count?: number;
 }
 
 export default function UczniwowiePage() {
@@ -29,6 +35,8 @@ export default function UczniwowiePage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { role, canCreateStudents, isAdminOrKonsultant } = usePermissions();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     imie: '',
@@ -43,8 +51,10 @@ export default function UczniwowiePage() {
   });
 
   useEffect(() => {
-    loadStudents();
-  }, []);
+    if (user && role) {
+      loadStudents();
+    }
+  }, [user, role]);
 
   useEffect(() => {
     if (search.trim() === '') {
@@ -62,16 +72,91 @@ export default function UczniwowiePage() {
   }, [search, students]);
 
   const loadStudents = async () => {
-    const { data, error } = await supabase
-      .from('uczniowie')
-      .select('*')
-      .order('nazwisko', { ascending: true });
+    if (!user || !role) return;
 
-    if (!error && data) {
-      setStudents(data);
-      setFilteredStudents(data);
+    try {
+      let studentsData: Student[] = [];
+
+      if (role === 'administrator' || role === 'konsultant') {
+        const { data, error } = await supabase
+          .from('uczniowie')
+          .select(`
+            *,
+            user_profiles!uczniowie_created_by_fkey(full_name)
+          `)
+          .order('nazwisko', { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const studentsWithDetails = await Promise.all(
+            data.map(async (student: any) => {
+              const { count } = await supabase
+                .from('student_guardians')
+                .select('*', { count: 'exact', head: true })
+                .eq('student_id', student.id);
+
+              return {
+                ...student,
+                tutor_name: student.user_profiles?.full_name || 'Nieznany',
+                guardian_count: count || 0,
+              };
+            })
+          );
+          studentsData = studentsWithDetails;
+        }
+      } else if (role === 'nauczyciel') {
+        const { data, error } = await supabase
+          .from('uczniowie')
+          .select('*')
+          .eq('created_by', user.id)
+          .order('nazwisko', { ascending: true });
+
+        if (error) throw error;
+        if (data) {
+          studentsData = data;
+        }
+      } else if (role === 'opiekun') {
+        const { data, error } = await supabase
+          .from('student_guardians')
+          .select(`
+            student_id,
+            uczniowie!inner(
+              id,
+              imie,
+              nazwisko,
+              email,
+              telefon,
+              szkola,
+              klasa,
+              created_by,
+              user_profiles!uczniowie_created_by_fkey(full_name)
+            )
+          `)
+          .eq('guardian_user_id', user.id);
+
+        if (error) throw error;
+
+        if (data) {
+          studentsData = data.map((item: any) => ({
+            ...item.uczniowie,
+            tutor_name: item.uczniowie.user_profiles?.full_name || 'Nieznany',
+          }));
+          studentsData.sort((a, b) => a.nazwisko.localeCompare(b.nazwisko));
+        }
+      }
+
+      setStudents(studentsData);
+      setFilteredStudents(studentsData);
+    } catch (error: any) {
+      toast({
+        title: 'Błąd',
+        description: error.message || 'Nie udało się załadować uczniów',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,6 +206,26 @@ export default function UczniwowiePage() {
     }
   };
 
+  const getPageDescription = () => {
+    if (role === 'administrator' || role === 'konsultant') {
+      return 'Lista wszystkich uczniów';
+    } else if (role === 'nauczyciel') {
+      return 'Lista Twoich uczniów';
+    } else if (role === 'opiekun') {
+      return 'Lista uczniów pod Twoją opieką';
+    }
+    return 'Lista uczniów';
+  };
+
+  const getEmptyStateMessage = () => {
+    if (role === 'nauczyciel') {
+      return 'Nie masz jeszcze żadnych uczniów. Dodaj pierwszego ucznia klikając przycisk powyżej.';
+    } else if (role === 'opiekun') {
+      return 'Nie jesteś jeszcze przypisany do żadnego ucznia. Skontaktuj się z nauczycielem lub administratorem.';
+    }
+    return 'Brak uczniów';
+  };
+
   if (loading) {
     return <div className="text-center py-12">Ładowanie...</div>;
   }
@@ -130,115 +235,117 @@ export default function UczniwowiePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Uczniowie</h1>
-          <p className="text-gray-600 mt-2">Lista wszystkich uczniów</p>
+          <p className="text-gray-600 mt-2">{getPageDescription()}</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900">
-              <Plus className="w-4 h-4 mr-2" />
-              Dodaj ucznia
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Nowy uczeń</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="imie">Imię *</Label>
-                  <Input
-                    id="imie"
-                    value={formData.imie}
-                    onChange={(e) => setFormData({ ...formData, imie: e.target.value })}
-                    required
-                  />
+        {canCreateStudents && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900">
+                <Plus className="w-4 h-4 mr-2" />
+                Dodaj ucznia
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Nowy uczeń</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="imie">Imię *</Label>
+                    <Input
+                      id="imie"
+                      value={formData.imie}
+                      onChange={(e) => setFormData({ ...formData, imie: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="nazwisko">Nazwisko *</Label>
+                    <Input
+                      id="nazwisko"
+                      value={formData.nazwisko}
+                      onChange={(e) => setFormData({ ...formData, nazwisko: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="telefon">Telefon</Label>
+                    <Input
+                      id="telefon"
+                      value={formData.telefon}
+                      onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="whatsapp">WhatsApp</Label>
+                    <Input
+                      id="whatsapp"
+                      value={formData.whatsapp}
+                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="messenger">Messenger</Label>
+                    <Input
+                      id="messenger"
+                      value={formData.messenger}
+                      onChange={(e) => setFormData({ ...formData, messenger: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="szkola">Szkoła</Label>
+                    <Input
+                      id="szkola"
+                      value={formData.szkola}
+                      onChange={(e) => setFormData({ ...formData, szkola: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="klasa">Klasa</Label>
+                    <Input
+                      id="klasa"
+                      value={formData.klasa}
+                      onChange={(e) => setFormData({ ...formData, klasa: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="nazwisko">Nazwisko *</Label>
-                  <Input
-                    id="nazwisko"
-                    value={formData.nazwisko}
-                    onChange={(e) => setFormData({ ...formData, nazwisko: e.target.value })}
-                    required
+                  <Label htmlFor="notatki">Notatki</Label>
+                  <Textarea
+                    id="notatki"
+                    value={formData.notatki}
+                    onChange={(e) => setFormData({ ...formData, notatki: e.target.value })}
+                    rows={3}
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Anuluj
+                  </Button>
+                  <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                    Dodaj ucznia
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="telefon">Telefon</Label>
-                  <Input
-                    id="telefon"
-                    value={formData.telefon}
-                    onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input
-                    id="whatsapp"
-                    value={formData.whatsapp}
-                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="messenger">Messenger</Label>
-                  <Input
-                    id="messenger"
-                    value={formData.messenger}
-                    onChange={(e) => setFormData({ ...formData, messenger: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="szkola">Szkoła</Label>
-                  <Input
-                    id="szkola"
-                    value={formData.szkola}
-                    onChange={(e) => setFormData({ ...formData, szkola: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="klasa">Klasa</Label>
-                  <Input
-                    id="klasa"
-                    value={formData.klasa}
-                    onChange={(e) => setFormData({ ...formData, klasa: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="notatki">Notatki</Label>
-                <Textarea
-                  id="notatki"
-                  value={formData.notatki}
-                  onChange={(e) => setFormData({ ...formData, notatki: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Anuluj
-                </Button>
-                <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                  Dodaj ucznia
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="relative">
@@ -255,7 +362,7 @@ export default function UczniwowiePage() {
         <Card>
           <CardContent className="py-12 text-center text-gray-500">
             <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p>Brak uczniów</p>
+            <p>{getEmptyStateMessage()}</p>
           </CardContent>
         </Card>
       ) : (
@@ -277,6 +384,30 @@ export default function UczniwowiePage() {
                       )}
                       {student.klasa && (
                         <p className="text-sm text-gray-500">Klasa: {student.klasa}</p>
+                      )}
+                      {isAdminOrKonsultant && student.tutor_name && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            {student.tutor_name}
+                          </Badge>
+                        </div>
+                      )}
+                      {isAdminOrKonsultant && student.guardian_count !== undefined && student.guardian_count > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Badge variant="outline" className="text-xs bg-blue-50">
+                            <UsersIcon className="w-3 h-3 mr-1" />
+                            {student.guardian_count} {student.guardian_count === 1 ? 'opiekun' : 'opiekunów'}
+                          </Badge>
+                        </div>
+                      )}
+                      {role === 'opiekun' && student.tutor_name && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Nauczyciel: {student.tutor_name}
+                          </Badge>
+                        </div>
                       )}
                     </div>
                   </div>
