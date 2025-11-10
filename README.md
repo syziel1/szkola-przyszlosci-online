@@ -12,6 +12,7 @@ Nowoczesny, webowy system zarządzania uczniami i zajęciami dla korepetytorów 
 - Tailwind CSS, Radix UI, shadcn/ui, lucide-react
 - date-fns
 - Supabase (`@supabase/supabase-js`)
+- react-hook-form (`react-hook-form`)
 
 ## Kluczowe funkcje
 
