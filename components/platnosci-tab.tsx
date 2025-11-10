@@ -64,11 +64,22 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate kwota
+    const kwotaValue = parseFloat(formData.kwota);
+    if (isNaN(kwotaValue) || kwotaValue <= 0) {
+      toast({
+        title: 'Błąd',
+        description: 'Kwota musi być liczbą większą od zera',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase.from('platnosci').insert([
       {
         student_id: studentId,
         data_platnosci: formData.data_platnosci,
-        kwota: parseFloat(formData.kwota),
+        kwota: kwotaValue,
         waluta: formData.waluta,
         metoda: formData.metoda || null,
         status: formData.status,

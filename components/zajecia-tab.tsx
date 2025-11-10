@@ -105,6 +105,17 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
       if (formData.is_recurring) {
         // Create recurring classes
         const weeksCount = parseInt(formData.recurring_weeks);
+        
+        // Validate weeks count
+        if (isNaN(weeksCount) || weeksCount <= 0 || weeksCount > 52) {
+          toast({
+            title: 'Błąd',
+            description: 'Liczba tygodni musi być liczbą od 1 do 52',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
         const promises = [];
         
         for (let week = 0; week < weeksCount; week++) {
@@ -134,12 +145,13 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
             description: `Nie udało się dodać ${errors.length} z ${weeksCount} zajęć`,
             variant: 'destructive',
           });
-        } else {
-          toast({
-            title: 'Sukces',
-            description: `Dodano ${weeksCount} cyklicznych zajęć`,
-          });
+          return;
         }
+        
+        toast({
+          title: 'Sukces',
+          description: `Dodano ${weeksCount} cyklicznych zajęć`,
+        });
       } else {
         // Create single class
         const { error } = await addClass({
@@ -161,12 +173,12 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
             variant: 'destructive',
           });
           return;
-        } else {
-          toast({
-            title: 'Sukces',
-            description: 'Zajęcia zostały dodane',
-          });
         }
+        
+        toast({
+          title: 'Sukces',
+          description: 'Zajęcia zostały dodane',
+        });
       }
 
       // Reset form and close dialog

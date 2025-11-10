@@ -135,7 +135,7 @@ export default function AdminPage() {
 
   const handleToggleActive = async (userId: string, currentStatus: boolean) => {
     // Check if this is the only administrator
-    if (!currentStatus === false) { // If we're trying to deactivate
+    if (currentStatus) { // If we're trying to deactivate (current status is true/active)
       const activeAdmins = users.filter(u => u.role === 'administrator' && u.is_active && u.user_id !== userId);
       const targetUser = users.find(u => u.user_id === userId);
       
