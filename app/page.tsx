@@ -109,7 +109,7 @@ export default function Home() {
                         {p.url.replace('https://', '')}
                       </a>
                     </div>
-                    <a href={p.url} target="_blank" rel="noreferrer">
+                    <a href={p.url} target="_blank" rel="noopener noreferrer">
                       <Button size="sm" variant="outline" className="gap-1">
                         <ExternalLink className="w-4 h-4" />
                         Zobacz
