@@ -128,8 +128,10 @@ export default function Home() {
                         loading="lazy"
                         className="w-full h-full object-cover rounded-md border"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = faviconUrl;
-                          (e.currentTarget as HTMLImageElement).className = 'w-16 h-16 object-contain rounded border m-3';
+                          const img = e.currentTarget as HTMLImageElement;
+                          img.src = faviconUrl;
+                          img.alt = `${p.name} logo`;
+                          img.className = 'w-16 h-16 object-contain rounded border m-3';
                         }}
                       />
                     </AspectRatio>
