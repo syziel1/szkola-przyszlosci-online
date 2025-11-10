@@ -22,6 +22,7 @@ interface UserProfile {
   role: string;
   full_name: string | null;
   phone: string | null;
+  bio: string | null;
   is_active: boolean;
   created_at: string;
   last_login_at: string | null;
