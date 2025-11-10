@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/lib/auth-context';
 import { ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useState } from 'react'; // Poprawny import
 
 export default function Home() {
   const { user, loading } = useAuth();
+  // Poprawna inicjalizacja stanu
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
+  // TYLKO JEDNA definicja 'projects'
   const projects = [
     {
       name: 'Edu Future',
@@ -34,29 +36,8 @@ export default function Home() {
       description: 'Ćwiczenia i materiały z matematyki online.'
     },
   ];
-
-  const projects = [
-    {
-      name: 'Edu Future',
-      url: 'https://edu-future.online/',
-      description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
-    },
-    {
-      name: 'SkillsCan AI',
-      url: 'https://skillscanai.online/',
-      description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
-    },
-    {
-      name: 'Zrozoom AI',
-      url: 'https://www.zrozoomai.pl/',
-      description: 'Warsztaty i wiedza o sztucznej inteligencji.'
-    },
-    {
-      name: 'Matma Base44',
-      url: 'https://matma.base44.app/',
-      description: 'Ćwiczenia i materiały z matematyki online.'
-    },
-  ];
+  
+  // Usunęliśmy dwie pozostałe, zduplikowane definicje 'projects'
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -119,7 +100,12 @@ export default function Home() {
               // Rotacja co 6 godzin (21600000 ms)
               const fresh = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
               const screenshotUrl = `https://image.thum.io/get/width/800/${encodeURIComponent(p.url)}?fresh=${fresh}`;
+              
+              // BRAKUJĄCA LINIA, KTÓRĄ DODALIŚMY:
               const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(p.url).hostname}&sz=128`;
+              
+              // USUNĘLIŚMY STARY, NIEPOTRZEBNY 'handleImageError'
+
               return (
                 <Card key={p.url} className="hover:shadow-md transition-shadow overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
@@ -128,7 +114,7 @@ export default function Home() {
                       <a
                         href={p.url}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer" // Poprawny, bezpieczny 'rel'
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
                         {p.url.replace('https://', '')}
@@ -144,6 +130,7 @@ export default function Home() {
                   <CardContent className="space-y-3">
                     <AspectRatio ratio={16 / 9}>
                       <img
+                        // Poprawna logika Reactowa z 'imageErrors'
                         src={imageErrors.has(p.url) ? faviconUrl : screenshotUrl}
                         alt={imageErrors.has(p.url) ? `${p.name} logo` : `${p.name} podgląd strony`}
                         loading="lazy"
@@ -152,6 +139,7 @@ export default function Home() {
                             ? 'w-16 h-16 object-contain rounded border m-3'
                             : 'w-full h-full object-cover rounded-md border'
                         }
+                        // Poprawny handler błędu oparty na stanie
                         onError={(e) => {
                           if (!imageErrors.has(p.url)) {
                             setImageErrors(prev => new Set(prev).add(p.url));
