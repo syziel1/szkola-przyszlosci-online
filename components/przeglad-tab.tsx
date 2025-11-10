@@ -70,7 +70,7 @@ export function PrzegladTab({ studentId }: PrzegladTabProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">Średnie zrozumienie</CardTitle>
-          <TrendingUp className="w-4 h-4 text-yellow-500" />
+          <TrendingUp className="w-4 h-4 text-blue-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.avgUnderstanding.toFixed(1)} / 5</div>
@@ -80,7 +80,7 @@ export function PrzegladTab({ studentId }: PrzegladTabProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">Oczekujące płatności</CardTitle>
-          <DollarSign className="w-4 h-4 text-yellow-500" />
+          <DollarSign className="w-4 h-4 text-blue-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.pendingPayments.toFixed(2)} PLN</div>

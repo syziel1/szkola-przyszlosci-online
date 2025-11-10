@@ -283,7 +283,7 @@ export default function AdminPage() {
         </div>
         <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <UserPlus className="w-4 h-4 mr-2" />
               Zaproś Członka Zespołu
             </Button>

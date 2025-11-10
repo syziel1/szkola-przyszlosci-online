@@ -451,7 +451,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                       </div>
                     )}
                     {zajecie.trudnosci && (
-                      <div className="mt-2 p-2 bg-yellow-50 rounded text-sm">
+                      <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
                         <span className="font-medium">Trudności:</span> {zajecie.trudnosci}
                       </div>
                     )}

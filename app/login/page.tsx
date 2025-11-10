@@ -90,8 +90,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-yellow-300 rounded-full flex items-center justify-center mb-4">
-            <GraduationCap className="w-8 h-8 text-gray-800" />
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+            <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-2xl">Baza Uczniów</CardTitle>
           <CardDescription>
