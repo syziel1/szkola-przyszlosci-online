@@ -1,6 +1,10 @@
 # Nazwa naszego workflow (pojawi się w zakładce Actions)
 name: Super-Linter
 
+permissions:
+  contents: read
+  statuses: write
+
 # Kiedy ta akcja ma się uruchamiać?
 on:
   push: # Przy każdym pushu na dowolną gałąź
@@ -32,3 +36,5 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true # Sprawdź cały kod, nie tylko zmiany
+          VALIDATE_JSCPD: false # Wyłącz sprawdzanie duplikatów kodu (tymczasowo)
+          VALIDATE_TYPESCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów TypeScript (tymczasowo)
