@@ -7,9 +7,6 @@ permissions:
 
 # Kiedy ta akcja ma się uruchamiać?
 on:
-  push: # Przy każdym pushu na dowolną gałąź
-    branches:
-      - '*' # Wszystkie gałęzie
   pull_request: # Oraz przy każdym otwarciu/aktualizacji Pull Requesta
     branches:
       - main # Celującego w 'main'
