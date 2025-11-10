@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuth } from '@/lib/auth-context';
 import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   const projects = [
     {
@@ -119,15 +121,18 @@ export default function Home() {
                   <CardContent className="space-y-3">
                     <AspectRatio ratio={16 / 9}>
                       <img
-                        src={screenshotUrl}
-                        alt={`${p.name} podgląd strony`}
+                        src={imageErrors.has(p.url) ? faviconUrl : screenshotUrl}
+                        alt={imageErrors.has(p.url) ? `${p.name} logo` : `${p.name} podgląd strony`}
                         loading="lazy"
-                        className="w-full h-full object-cover rounded-md border"
+                        className={
+                          imageErrors.has(p.url)
+                            ? 'w-16 h-16 object-contain rounded border m-3'
+                            : 'w-full h-full object-cover rounded-md border'
+                        }
                         onError={(e) => {
-                          const img = e.currentTarget as HTMLImageElement;
-                          img.src = faviconUrl;
-                          img.alt = `${p.name} logo`;
-                          img.className = 'w-16 h-16 object-contain rounded border m-3';
+                          if (!imageErrors.has(p.url)) {
+                            setImageErrors(prev => new Set(prev).add(p.url));
+                          }
                         }}
                       />
                     </AspectRatio>
