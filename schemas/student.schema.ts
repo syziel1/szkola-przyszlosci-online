@@ -3,11 +3,11 @@ import { z } from 'zod';
 export const studentSchema = z.object({
   imie: z.string({
     required_error: 'Imię jest wymagane',
-  }).min(1, 'Imię jest wymagane').min(2, 'Imię musi mieć co najmniej 2 znaki'),
+  }).min(2, 'Imię musi mieć co najmniej 2 znaki'),
   
   nazwisko: z.string({
     required_error: 'Nazwisko jest wymagane',
-  }).min(1, 'Nazwisko jest wymagane').min(2, 'Nazwisko musi mieć co najmniej 2 znaki'),
+  }).min(2, 'Nazwisko musi mieć co najmniej 2 znaki'),
   
   email: z.string()
     .email('Nieprawidłowy format adresu email')
