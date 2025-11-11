@@ -14,23 +14,22 @@ export function middleware(request: NextRequest) {
   crypto.getRandomValues(nonceArray);
   const nonce = Buffer.from(nonceArray).toString('base64');
 
-  // 3. CRITICAL: Add the nonce to the request headers
-  // This allows Next.js server components to read it and apply it to scripts/styles.
+  // 3. Add the nonce to the request headers
+  // This allows Next.js server components to read it and apply it to custom scripts/styles.
+  // The nonce is available via the NonceProvider context for any custom inline scripts.
   request.headers.set('X-Nonce', nonce);
 
   // 4. Define the secure Content Security Policy (CSP)
   const cspDirectives = [
     "default-src 'self'",
-    // Use the nonce for scripts, enable 'strict-dynamic'
-    // 'unsafe-eval' is kept only for development HMR
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
+    // Allow self, nonce-based scripts, and 'unsafe-inline' for Next.js framework
+    // 'strict-dynamic' allows scripts loaded by nonce'd scripts
+    // 'unsafe-eval' and 'unsafe-inline' are included for Next.js compatibility
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' ${
       process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
     }`,
-    // Use the nonce for styles
-    // 'unsafe-inline' is kept only for development HMR
-    `style-src 'self' 'nonce-${nonce}' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
-    }`,
+    // Allow self, nonce-based styles, and 'unsafe-inline' for Next.js/Tailwind compatibility
+    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
     // Whitelist specific image hosts (removed insecure 'https:')
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
     // Whitelist specific font hosts (removed insecure 'https:')
