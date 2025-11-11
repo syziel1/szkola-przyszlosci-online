@@ -42,7 +42,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       data_platnosci: format(new Date(), 'yyyy-MM-dd'),
-      kwota: '',
+      kwota: 0,
       waluta: 'PLN',
       metoda: '',
       status: 'oczekuje',
