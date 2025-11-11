@@ -128,11 +128,20 @@ export default function Home() {
                         alt={`${p.name} podgląd strony`}
                         loading="lazy"
                         className="w-full h-full object-cover rounded-md border"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = faviconUrl;
-                          (e.currentTarget as HTMLImageElement).className = 'w-16 h-16 object-contain rounded border m-3';
+                          // If screenshot fails, try favicon. If favicon fails, show placeholder.
+                          if (e.currentTarget.src !== faviconUrl) {
+                            (e.currentTarget as HTMLImageElement).src = faviconUrl;
+                            (e.currentTarget as HTMLImageElement).className = 'w-16 h-16 object-contain rounded border m-3';
+                          } else {
+                            (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="#888">Brak podglądu</text></svg>';
+                            (e.currentTarget as HTMLImageElement).className = 'w-16 h-16 object-contain rounded border m-3';
+                          }
                         }}
                       />
+                      {/* NOTE: For best security, set a restrictive Content Security Policy (CSP) for img-src in your project configuration. */}
                     </AspectRatio>
                     <p className="text-sm text-gray-600">{p.description}</p>
                   </CardContent>
