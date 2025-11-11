@@ -296,7 +296,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Godzina zakończenia</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
