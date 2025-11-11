@@ -33,7 +33,7 @@ export const classSchema = z.object({
 }).refine((data) => {
   // If recurring is enabled, validate recurring_weeks
   if (data.is_recurring) {
-    if (!data.recurring_weeks) {
+    if (!data.recurring_weeks || data.recurring_weeks === '') {
       return false;
     }
     const weeks = parseInt(data.recurring_weeks);
