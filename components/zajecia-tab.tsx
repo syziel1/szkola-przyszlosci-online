@@ -340,7 +340,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                       render={({ field }) => (
                         <FormItem className="ml-6">
                           <FormLabel>Liczba tygodni</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value ?? ''}>
                             <FormControl>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
