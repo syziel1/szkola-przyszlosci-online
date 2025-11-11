@@ -19,28 +19,25 @@ export function middleware(request: NextRequest) {
   request.headers.set('X-Nonce', nonce);
 
   // 4. Define the secure Content Security Policy (CSP)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  const scriptSrcParts = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
+  if (isDevelopment) scriptSrcParts.push("'unsafe-eval'");
+  
+  const styleSrcParts = ["'self'", `'nonce-${nonce}'`];
+  if (isDevelopment) styleSrcParts.push("'unsafe-inline'");
+  
   const cspDirectives = [
     "default-src 'self'",
-    // Use the nonce for scripts, enable 'strict-dynamic'
-    // 'unsafe-eval' is kept only for development HMR
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
-    }`,
-    // Use the nonce for styles
-    // 'unsafe-inline' is kept only for development HMR
-    `style-src 'self' 'nonce-${nonce}' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
-    }`,
-    // Whitelist specific image hosts (removed insecure 'https:')
+    `script-src ${scriptSrcParts.join(' ')}`,
+    `style-src ${styleSrcParts.join(' ')}`,
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
-    // Whitelist specific font hosts (removed insecure 'https:')
     `font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com`,
-    // Whitelist Supabase connections
     `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
-  ];
+  ].filter(Boolean);
 
   const csp = cspDirectives.join('; ');
 
@@ -52,10 +49,7 @@ export function middleware(request: NextRequest) {
   });
 
   // 6. Set all security headers on the outgoing response
-  response.headers.set(
-    'Content-Security-Policy',
-    csp.replace(/\s{2,}/g, ' ').trim()
-  );
+  response.headers.set('Content-Security-Policy', csp);
 
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
