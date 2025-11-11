@@ -86,7 +86,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
       const endTime = getDefaultEndTime(startTime);
       setValue('end_time', endTime);
     }
-  }, [startTime]);
+  }, [startTime, setValue]);
 
   // Generate time options in 15-minute intervals
   const generateTimeOptions = () => {
