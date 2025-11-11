@@ -109,6 +109,7 @@ export default function Home() {
                         target="_blank"
                         rel="noreferrer"
                         className="text-xs text-blue-600 hover:underline break-all"
+                        aria-label={`Visit ${p.name}`}
                       >
                         {p.url.replace('https://', '')}
                       </a>
