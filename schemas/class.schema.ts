@@ -17,7 +17,10 @@ export const classSchema = z.object({
   
   temat: z.string().optional(),
   
-  zrozumienie: z.string().optional(),
+  zrozumienie: z.preprocess(
+    (val: unknown) => (val === '' ? undefined : val),
+    z.coerce.number().min(1).max(5).optional()
+  ),
   
   trudnosci: z.string().optional(),
   
