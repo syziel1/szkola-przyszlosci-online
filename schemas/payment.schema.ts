@@ -5,16 +5,10 @@ export const paymentSchema = z.object({
     required_error: 'Data płatności jest wymagana',
   }).min(1, 'Data płatności jest wymagana'),
   
-  kwota: z.string({
+  kwota: z.coerce.number({
     required_error: 'Kwota jest wymagana',
-  })
-    .min(1, 'Kwota jest wymagana')
-    .refine((val) => !isNaN(parseFloat(val)), {
-      message: 'Kwota musi być liczbą',
-    })
-    .refine((val) => parseFloat(val) > 0, {
-      message: 'Kwota musi być większa od zera',
-    }),
+    invalid_type_error: 'Kwota musi być liczbą',
+  }).positive('Kwota musi być większa od zera'),
   
   waluta: z.string().default('PLN'),
   
