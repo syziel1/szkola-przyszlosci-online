@@ -44,7 +44,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
       data_platnosci: format(new Date(), 'yyyy-MM-dd'),
       kwota: 0,
       waluta: 'PLN',
-      metoda: undefined,
+      metoda: '',
       status: 'oczekuje',
       notatki: '',
     },
@@ -96,7 +96,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
         data_platnosci: format(new Date(), 'yyyy-MM-dd'),
         kwota: 0,
         waluta: 'PLN',
-        metoda: undefined,
+        metoda: '',
         status: 'oczekuje',
         notatki: '',
       });
@@ -187,7 +187,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Metoda płatności</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Wybierz metodę" />
