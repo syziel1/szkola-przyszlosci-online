@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-export const classSchema = z.object({
+// Base schema with common fields
+const baseClassSchema = z.object({
   subject: z.enum(['matematyka', 'fizyka', 'informatyka'], {
     required_error: 'Przedmiot jest wymagany',
   }),
@@ -26,23 +27,19 @@ export const classSchema = z.object({
   status_pd: z.enum(['brak', 'zadane', 'oddane', 'poprawa'], {
     required_error: 'Status pracy domowej jest wymagany',
   }),
-  
-  is_recurring: z.boolean().default(false),
-  
-  recurring_weeks: z.string().optional(),
-}).refine((data) => {
-  // If recurring is enabled, validate recurring_weeks
-  if (data.is_recurring) {
-    if (!data.recurring_weeks || data.recurring_weeks === '') {
-      return false;
-    }
-    const weeks = parseInt(data.recurring_weeks);
-    return !isNaN(weeks) && weeks > 0 && weeks <= 52;
-  }
-  return true;
-}, {
-  message: 'Liczba tygodni musi być liczbą od 1 do 52',
-  path: ['recurring_weeks'],
 });
+
+// Discriminated union for recurring vs non-recurring classes
+export const classSchema = z.discriminatedUnion('is_recurring', [
+  // Non-recurring class
+  baseClassSchema.extend({
+    is_recurring: z.literal(false),
+  }),
+  // Recurring class
+  baseClassSchema.extend({
+    is_recurring: z.literal(true),
+    recurring_weeks: z.coerce.number().int().min(1, 'Liczba tygodni musi być większa niż 0').max(52, 'Liczba tygodni nie może być większa niż 52'),
+  }),
+]);
 
 export type ClassFormData = z.infer<typeof classSchema>;

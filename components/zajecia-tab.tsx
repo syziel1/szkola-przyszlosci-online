@@ -72,8 +72,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
       praca_domowa: '',
       status_pd: 'brak',
       is_recurring: false,
-      recurring_weeks: '4',
-    },
+    } as ClassFormData,
   });
 
   // Watch for start_time changes to update end_time
@@ -109,7 +108,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
     try {
       if (values.is_recurring) {
         // Create recurring classes
-        const weeksCount = parseInt(values.recurring_weeks || '0');
+        const weeksCount = values.recurring_weeks;
         
         const promises = [];
         
@@ -189,8 +188,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
         praca_domowa: '',
         status_pd: 'brak',
         is_recurring: false,
-        recurring_weeks: '4',
-      });
+      } as ClassFormData);
     } catch (error) {
       toast({
         title: 'Błąd',
@@ -340,7 +338,10 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                       render={({ field }) => (
                         <FormItem className="ml-6">
                           <FormLabel>Liczba tygodni</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                          <Select 
+                            onValueChange={(value) => field.onChange(parseInt(value))} 
+                            value={field.value?.toString() ?? '4'}
+                          >
                             <FormControl>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -452,7 +453,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                     Anuluj
                   </Button>
                   <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                    {isRecurring ? `Dodaj ${form.watch('recurring_weeks') || '4'} zajęć` : 'Dodaj zajęcia'}
+                    {isRecurring && form.getValues('is_recurring') ? `Dodaj ${(form.getValues() as any).recurring_weeks || '4'} zajęć` : 'Dodaj zajęcia'}
                   </Button>
                 </div>
               </form>
