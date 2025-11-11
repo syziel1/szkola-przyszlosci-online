@@ -32,7 +32,7 @@ export function middleware(request: NextRequest) {
       process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
     }`,
     // Whitelist specific image hosts (removed insecure 'https:')
-    `img-src 'self' data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com/s2/favicons https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com`,
+    `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
     // Whitelist specific font hosts (removed insecure 'https:')
     `font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com`,
     // Whitelist Supabase connections
