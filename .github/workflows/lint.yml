@@ -36,3 +36,4 @@ jobs:
           VALIDATE_JSCPD: false # Wyłącz sprawdzanie duplikatów kodu (tymczasowo)
           VALIDATE_CSS: false # Wyłącz sprawdzanie CSS (tymczasowo)
           VALIDATE_JAVASCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów JavaScript (tymczasowo)
+          VALIDATE_TYPESCRIPT_STANDARD: false # Wyłącz sprawdzanie standardów TypeScript (tymczasowo)

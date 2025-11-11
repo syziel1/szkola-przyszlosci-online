@@ -68,7 +68,7 @@ export function useUczenKsiazki(studentId?: string) {
 
       const { data, error: insertError } = await supabase
         .from('uczen_ksiazka')
-        .insert({ ...assignment, created_by: userData.user.id })
+        .insert(assignment)
         .select()
         .single();
 
