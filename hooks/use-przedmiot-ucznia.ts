@@ -68,7 +68,7 @@ export function usePrzedmiotyUcznia(studentId?: string) {
 
       const { data, error: insertError } = await supabase
         .from('przedmiot_ucznia')
-        .insert({ ...przedmiot, created_by: userData.user.id })
+        .insert(przedmiot)
         .select()
         .single();
 

@@ -237,12 +237,7 @@ export default function UczniwowiePage() {
       return;
     }
 
-    const { error } = await supabase.from('uczniowie').insert([
-      {
-        ...formData,
-        created_by: userData.user.id,
-      }
-    ]);
+    const { error } = await supabase.from('uczniowie').insert([formData]);
 
     if (error) {
       toast({
