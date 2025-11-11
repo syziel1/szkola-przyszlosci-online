@@ -10,10 +10,9 @@ export const studentSchema = z.object({
   }).min(1, 'Nazwisko jest wymagane').min(2, 'Nazwisko musi mieć co najmniej 2 znaki'),
   
   email: z.string()
+    .email('Nieprawidłowy format adresu email')
     .optional()
-    .refine((val) => !val || val === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
-      message: 'Nieprawidłowy format adresu email',
-    }),
+    .or(z.literal('')),
   
   telefon: z.string().optional(),
   
