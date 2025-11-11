@@ -62,7 +62,7 @@ export function useKsiazki() {
 
       const { data, error: insertError } = await supabase
         .from('ksiazki')
-        .insert({ ...ksiazka, created_by: userData.user.id })
+        .insert(ksiazka)
         .select()
         .single();
 

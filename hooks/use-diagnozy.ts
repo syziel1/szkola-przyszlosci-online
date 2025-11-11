@@ -68,7 +68,7 @@ export function useDiagnozy(studentId?: string) {
 
       const { data, error: insertError } = await supabase
         .from('diagnozy')
-        .insert({ ...diagnoza, created_by: userData.user.id })
+        .insert(diagnoza)
         .select()
         .single();
 

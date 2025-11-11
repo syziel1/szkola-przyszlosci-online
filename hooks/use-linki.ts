@@ -68,7 +68,7 @@ export function useLinki(ownerType?: Database['public']['Enums']['owner_type_enu
 
       const { data, error: insertError } = await supabase
         .from('linki')
-        .insert({ ...link, created_by: userData.user.id })
+        .insert(link)
         .select()
         .single();
 
