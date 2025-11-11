@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
   // 2. Generate a secure nonce (using crypto.getRandomValues per review)
   const nonceArray = new Uint8Array(16);
   crypto.getRandomValues(nonceArray);
-  const nonce = Buffer.from(nonceArray).toString('base64');
+  const nonce = btoa(String.fromCharCode(...nonceArray));
 
   // 3. CRITICAL: Add the nonce to the request headers
   // This allows Next.js server components to read it and apply it to scripts/styles.
