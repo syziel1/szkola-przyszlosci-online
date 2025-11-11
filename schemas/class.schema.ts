@@ -17,7 +17,7 @@ export const classSchema = z.object({
   
   temat: z.string().optional(),
   
-  zrozumienie: z.string().optional(),
+  zrozumienie: z.coerce.number().min(1, 'Zrozumienie musi być od 1 do 5').max(5, 'Zrozumienie musi być od 1 do 5').optional(),
   
   trudnosci: z.string().optional(),
   
