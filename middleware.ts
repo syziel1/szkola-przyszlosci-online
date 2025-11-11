@@ -1,36 +1,41 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-// 1. Bezpieczne pobranie hosta Supabase (zgodnie z sugestią Copilota)
+// 1. Securely get Supabase host (as suggested by code review)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!supabaseUrl) {
-  // To zatrzyma serwer przy starcie, jeśli zmienna nie jest ustawiona
+  // This will stop the server on startup if the variable is missing
   throw new Error('CRITICAL_ERROR: Missing NEXT_PUBLIC_SUPABASE_URL');
 }
 const supabaseHost = new URL(supabaseUrl).hostname;
 
 export function middleware(request: NextRequest) {
-  // 2. Wygeneruj unikalny nonce dla każdego żądania
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  // 2. Generate a secure nonce (using crypto.getRandomValues per review)
+  const nonceArray = new Uint8Array(16);
+  crypto.getRandomValues(nonceArray);
+  const nonce = Buffer.from(nonceArray).toString('base64');
 
-  // 3. Zdefiniuj politykę bezpieczeństwa (CSP)
-  // Ta polityka jest znacznie bezpieczniejsza.
-  // Używamy 'nonce-${nonce}' zamiast 'unsafe-inline' i 'unsafe-eval'.
+  // 3. CRITICAL: Add the nonce to the request headers
+  // This allows Next.js server components to read it and apply it to scripts/styles.
+  request.headers.set('X-Nonce', nonce);
+
+  // 4. Define the secure Content Security Policy (CSP)
   const cspDirectives = [
     "default-src 'self'",
-    // Next.js potrzebuje 'strict-dynamic' do ładowania swoich skryptów
-    // Dodajemy 'unsafe-eval' TYLKO w trybie deweloperskim dla HMR (Hot Module Replacement)
+    // Use the nonce for scripts, enable 'strict-dynamic'
+    // 'unsafe-eval' is kept only for development HMR
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
       process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
     }`,
-    // 'unsafe-inline' jest potrzebne w trybie dev dla HMR
+    // Use the nonce for styles
+    // 'unsafe-inline' is kept only for development HMR
     `style-src 'self' 'nonce-${nonce}' ${
       process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
     }`,
-    // Lista dozwolonych hostów dla obrazów (z poprzedniej konfiguracji)
-    `img-src 'self' https: data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com`,
-    // Dodajemy hosty dla czcionek (np. Google Fonts)
-    "font-src 'self' https: data: https://fonts.gstatic.com",
-    // Połączenia (API, WebSockets)
+    // Whitelist specific image hosts (removed insecure 'https:')
+    `img-src 'self' data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com`,
+    // Whitelist specific font hosts (removed insecure 'https:')
+    `font-src 'self' data: https://fonts.gstatic.com`,
+    // Whitelist Supabase connections
     `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
@@ -39,35 +44,39 @@ export function middleware(request: NextRequest) {
 
   const csp = cspDirectives.join('; ');
 
-  // 4. Ustaw nagłówki w odpowiedzi
-  const response = NextResponse.next();
+  // 5. Create the response, passing the modified request headers
+  const response = NextResponse.next({
+    request: {
+      headers: new Headers(request.headers),
+    },
+  });
 
-  // Ustaw nagłówek CSP. Next.js automatycznie wykryje ten nonce.
+  // 6. Set all security headers on the outgoing response
   response.headers.set(
     'Content-Security-Policy',
     csp.replace(/\s{2,}/g, ' ').trim()
   );
 
-  // Ustaw inne nagłówki bezpieczeństwa (przeniesione z next.config.js)
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-XSS-Protection', '0'); // Wyłączone na rzecz CSP
+  // Set X-XSS-Protection to '1; mode=block' for older browsers
+  response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
 
   return response;
 }
 
-// 5. Określ, dla jakich ścieżek ma działać middleware
+// 7. Configure middleware paths (no change needed)
 export const config = {
   matcher: [
     /*
-     * Dopasuj wszystkie ścieżki z wyjątkiem:
-     * - /api (trasy API)
-     * - /_next/static (pliki statyczne)
-     * - /_next/image (optymalizacja obrazów)
-     * - /favicon.ico (plik favicon)
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
      */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
