@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +12,13 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, User, Eye, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Phone, Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/lib/auth-context';
 import { formatClassDateTimeWithCountdown } from '@/lib/date-utils';
+import { studentSchema, type StudentFormData } from '@/schemas/student.schema';
 
 interface ClassInfo {
   id: string;
@@ -56,28 +59,34 @@ export default function UczniwowiePage() {
   const { role, canCreateStudents, isAdminOrKonsultant } = usePermissions();
   const { user } = useAuth();
 
-  const [formData, setFormData] = useState({
-    imie: '',
-    nazwisko: '',
-    email: '',
-    telefon: '',
-    whatsapp: '',
-    messenger: '',
-    szkola: '',
-    klasa: '',
-    notatki: '',
+  const createForm = useForm<StudentFormData>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: {
+      imie: '',
+      nazwisko: '',
+      email: '',
+      telefon: '',
+      whatsapp: '',
+      messenger: '',
+      szkola: '',
+      klasa: '',
+      notatki: '',
+    },
   });
 
-  const [editFormData, setEditFormData] = useState({
-    imie: '',
-    nazwisko: '',
-    email: '',
-    telefon: '',
-    whatsapp: '',
-    messenger: '',
-    szkola: '',
-    klasa: '',
-    notatki: '',
+  const editForm = useForm<StudentFormData>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: {
+      imie: '',
+      nazwisko: '',
+      email: '',
+      telefon: '',
+      whatsapp: '',
+      messenger: '',
+      szkola: '',
+      klasa: '',
+      notatki: '',
+    },
   });
 
   useEffect(() => {
@@ -224,9 +233,7 @@ export default function UczniwowiePage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: StudentFormData) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
       toast({
@@ -237,7 +244,19 @@ export default function UczniwowiePage() {
       return;
     }
 
-    const { error } = await supabase.from('uczniowie').insert([formData]);
+    const { error } = await supabase.from('uczniowie').insert([
+      {
+        ...values,
+        email: values.email || null,
+        telefon: values.telefon || null,
+        whatsapp: values.whatsapp || null,
+        messenger: values.messenger || null,
+        szkola: values.szkola || null,
+        klasa: values.klasa || null,
+        notatki: values.notatki || null,
+        created_by: userData.user.id,
+      }
+    ]);
 
     if (error) {
       toast({
@@ -251,24 +270,14 @@ export default function UczniwowiePage() {
         description: 'Uczeń został dodany',
       });
       setDialogOpen(false);
-      setFormData({
-        imie: '',
-        nazwisko: '',
-        email: '',
-        telefon: '',
-        whatsapp: '',
-        messenger: '',
-        szkola: '',
-        klasa: '',
-        notatki: '',
-      });
+      createForm.reset();
       loadStudents();
     }
   };
 
   const handleEditClick = (student: StudentWithClasses) => {
     setEditingStudent(student);
-    setEditFormData({
+    editForm.reset({
       imie: student.imie,
       nazwisko: student.nazwisko,
       email: student.email || '',
@@ -282,23 +291,21 @@ export default function UczniwowiePage() {
     setEditDialogOpen(true);
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleEditSubmit = async (values: StudentFormData) => {
     if (!editingStudent) return;
 
     const { error } = await supabase
       .from('uczniowie')
       .update({
-        imie: editFormData.imie,
-        nazwisko: editFormData.nazwisko,
-        email: editFormData.email || null,
-        telefon: editFormData.telefon || null,
-        whatsapp: editFormData.whatsapp || null,
-        messenger: editFormData.messenger || null,
-        szkola: editFormData.szkola || null,
-        klasa: editFormData.klasa || null,
-        notatki: editFormData.notatki || null,
+        imie: values.imie,
+        nazwisko: values.nazwisko,
+        email: values.email || null,
+        telefon: values.telefon || null,
+        whatsapp: values.whatsapp || null,
+        messenger: values.messenger || null,
+        szkola: values.szkola || null,
+        klasa: values.klasa || null,
+        notatki: values.notatki || null,
       })
       .eq('id', editingStudent.id);
 
@@ -389,100 +396,143 @@ export default function UczniwowiePage() {
               <DialogHeader>
                 <DialogTitle>Nowy uczeń</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="imie">Imię *</Label>
-                    <Input
-                      id="imie"
-                      value={formData.imie}
-                      onChange={(e) => setFormData({ ...formData, imie: e.target.value })}
-                      required
+              <Form {...createForm}>
+                <form onSubmit={createForm.handleSubmit(handleSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="imie"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Imię *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="nazwisko"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nazwisko *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="nazwisko">Nazwisko *</Label>
-                    <Input
-                      id="nazwisko"
-                      value={formData.nazwisko}
-                      onChange={(e) => setFormData({ ...formData, nazwisko: e.target.value })}
-                      required
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="telefon"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefon</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="messenger"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Messenger</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="telefon">Telefon</Label>
-                    <Input
-                      id="telefon"
-                      value={formData.telefon}
-                      onChange={(e) => setFormData({ ...formData, telefon: e.target.value })}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="szkola"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Szkoła</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="klasa"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Klasa</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="whatsapp">WhatsApp</Label>
-                    <Input
-                      id="whatsapp"
-                      value={formData.whatsapp}
-                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="messenger">Messenger</Label>
-                    <Input
-                      id="messenger"
-                      value={formData.messenger}
-                      onChange={(e) => setFormData({ ...formData, messenger: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="szkola">Szkoła</Label>
-                    <Input
-                      id="szkola"
-                      value={formData.szkola}
-                      onChange={(e) => setFormData({ ...formData, szkola: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="klasa">Klasa</Label>
-                    <Input
-                      id="klasa"
-                      value={formData.klasa}
-                      onChange={(e) => setFormData({ ...formData, klasa: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="notatki">Notatki</Label>
-                  <Textarea
-                    id="notatki"
-                    value={formData.notatki}
-                    onChange={(e) => setFormData({ ...formData, notatki: e.target.value })}
-                    rows={3}
+                  <FormField
+                    control={createForm.control}
+                    name="notatki"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notatki</FormLabel>
+                        <FormControl>
+                          <Textarea rows={3} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Anuluj
-                  </Button>
-                  <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                    Dodaj ucznia
-                  </Button>
-                </div>
-              </form>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Anuluj
+                    </Button>
+                    <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                      Dodaj ucznia
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         )}
@@ -618,100 +668,143 @@ export default function UczniwowiePage() {
           <DialogHeader>
             <DialogTitle>Edytuj ucznia</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-imie">Imię *</Label>
-                <Input
-                  id="edit-imie"
-                  value={editFormData.imie}
-                  onChange={(e) => setEditFormData({ ...editFormData, imie: e.target.value })}
-                  required
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="imie"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Imię *</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="nazwisko"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nazwisko *</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="edit-nazwisko">Nazwisko *</Label>
-                <Input
-                  id="edit-nazwisko"
-                  value={editFormData.nazwisko}
-                  onChange={(e) => setEditFormData({ ...editFormData, nazwisko: e.target.value })}
-                  required
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="telefon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefon</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editFormData.email}
-                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="whatsapp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>WhatsApp</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="messenger"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Messenger</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="edit-telefon">Telefon</Label>
-                <Input
-                  id="edit-telefon"
-                  value={editFormData.telefon}
-                  onChange={(e) => setEditFormData({ ...editFormData, telefon: e.target.value })}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="szkola"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Szkoła</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="klasa"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Klasa</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-whatsapp">WhatsApp</Label>
-                <Input
-                  id="edit-whatsapp"
-                  value={editFormData.whatsapp}
-                  onChange={(e) => setEditFormData({ ...editFormData, whatsapp: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-messenger">Messenger</Label>
-                <Input
-                  id="edit-messenger"
-                  value={editFormData.messenger}
-                  onChange={(e) => setEditFormData({ ...editFormData, messenger: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-szkola">Szkoła</Label>
-                <Input
-                  id="edit-szkola"
-                  value={editFormData.szkola}
-                  onChange={(e) => setEditFormData({ ...editFormData, szkola: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-klasa">Klasa</Label>
-                <Input
-                  id="edit-klasa"
-                  value={editFormData.klasa}
-                  onChange={(e) => setEditFormData({ ...editFormData, klasa: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="edit-notatki">Notatki</Label>
-              <Textarea
-                id="edit-notatki"
-                value={editFormData.notatki}
-                onChange={(e) => setEditFormData({ ...editFormData, notatki: e.target.value })}
-                rows={3}
+              <FormField
+                control={editForm.control}
+                name="notatki"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notatki</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Anuluj
-              </Button>
-              <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                Zapisz zmiany
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Anuluj
+                </Button>
+                <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                  Zapisz zmiany
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
