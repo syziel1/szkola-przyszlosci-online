@@ -19,18 +19,27 @@ export function middleware(request: NextRequest) {
   request.headers.set('X-Nonce', nonce);
 
   // 4. Define the secure Content Security Policy (CSP)
+  const scriptSrcValues = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : '',
+  ].filter(Boolean).join(' ');
+
+  const styleSrcValues = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : '',
+  ].filter(Boolean).join(' ');
+
   const cspDirectives = [
     "default-src 'self'",
     // Use the nonce for scripts, enable 'strict-dynamic'
     // 'unsafe-eval' is kept only for development HMR
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
-    }`,
+    `script-src ${scriptSrcValues}`,
     // Use the nonce for styles
     // 'unsafe-inline' is kept only for development HMR
-    `style-src 'self' 'nonce-${nonce}' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
-    }`,
+    `style-src ${styleSrcValues}`,
     // Whitelist specific image hosts (removed insecure 'https:')
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
     // Whitelist specific font hosts (removed insecure 'https:')
@@ -52,10 +61,7 @@ export function middleware(request: NextRequest) {
   });
 
   // 6. Set all security headers on the outgoing response
-  response.headers.set(
-    'Content-Security-Policy',
-    csp.replace(/\s{2,}/g, ' ').trim()
-  );
+  response.headers.set('Content-Security-Policy', csp);
 
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
