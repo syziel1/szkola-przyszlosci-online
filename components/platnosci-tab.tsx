@@ -96,7 +96,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
       setDialogOpen(false);
       form.reset({
         data_platnosci: format(new Date(), 'yyyy-MM-dd'),
-        kwota: '',
+        kwota: undefined,
         waluta: 'PLN',
         metoda: '',
         status: 'oczekuje',
