@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from '@/components/ui/toaster'
+import { headers } from 'next/headers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,6 +17,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Read the nonce from the request headers set by middleware
+  const nonce = headers().get('x-nonce')
+  
   return (
     <html lang="pl">
       <body className={inter.className}>

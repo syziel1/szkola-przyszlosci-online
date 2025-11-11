@@ -6,7 +6,11 @@ if (!supabaseUrl) {
   // This will stop the server on startup if the variable is missing
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
 }
-const supabaseHost = new URL(supabaseUrl).hostname;
+const parsedSupabaseUrl = new URL(supabaseUrl);
+if (parsedSupabaseUrl.protocol !== 'https:') {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL must use HTTPS protocol');
+}
+const supabaseHost = parsedSupabaseUrl.hostname;
 
 export function middleware(request: NextRequest) {
   // 2. Generate a secure nonce (using crypto.getRandomValues per review)
@@ -16,6 +20,28 @@ export function middleware(request: NextRequest) {
 
   // 3. CRITICAL: Add the nonce to the request headers
   // This allows Next.js server components to read it and apply it to scripts/styles.
+  // 
+  // To complete CSP nonce propagation, you must read the nonce from the request headers
+  // in your server components (e.g., app/layout.tsx) and apply it to <script> and <style> tags.
+  //
+  // Example (app/layout.tsx):
+  //
+  // import { headers } from 'next/headers';
+  //
+  // export default function RootLayout({ children }) {
+  //   const nonce = headers().get('x-nonce');
+  //   return (
+  //     <html>
+  //       <head>
+  //         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: '...' }} />
+  //         <style nonce={nonce}>{'...'}</style>
+  //       </head>
+  //       <body>{children}</body>
+  //     </html>
+  //   );
+  // }
+  //
+  // Without this, the CSP nonce mechanism will not work and inline scripts/styles will be blocked.
   request.headers.set('X-Nonce', nonce);
 
   // 4. Define the secure Content Security Policy (CSP)
@@ -66,16 +92,15 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// 7. Configure middleware paths (no change needed)
+// 7. Configure middleware paths
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
