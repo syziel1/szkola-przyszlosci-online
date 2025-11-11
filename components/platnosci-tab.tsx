@@ -1,18 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, DollarSign, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { paymentSchema, type PaymentFormData } from '@/schemas/payment.schema';
 
 interface PlatnosciTabProps {
   studentId: string;
@@ -35,13 +38,16 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    data_platnosci: format(new Date(), 'yyyy-MM-dd'),
-    kwota: '',
-    waluta: 'PLN',
-    metoda: '',
-    status: 'oczekuje' as 'oczekuje' | 'zapłacone' | 'zaległe' | 'anulowane',
-    notatki: '',
+  const form = useForm<PaymentFormData>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      data_platnosci: format(new Date(), 'yyyy-MM-dd'),
+      kwota: '',
+      waluta: 'PLN',
+      metoda: '',
+      status: 'oczekuje',
+      notatki: '',
+    },
   });
 
   useEffect(() => {
@@ -61,29 +67,18 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate kwota
-    const kwotaValue = parseFloat(formData.kwota);
-    if (isNaN(kwotaValue) || kwotaValue <= 0) {
-      toast({
-        title: 'Błąd',
-        description: 'Kwota musi być liczbą większą od zera',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const handleSubmit = async (values: PaymentFormData) => {
+    const kwotaValue = parseFloat(values.kwota);
 
     const { error } = await supabase.from('platnosci').insert([
       {
         student_id: studentId,
-        data_platnosci: formData.data_platnosci,
+        data_platnosci: values.data_platnosci,
         kwota: kwotaValue,
-        waluta: formData.waluta,
-        metoda: formData.metoda || null,
-        status: formData.status,
-        notatki: formData.notatki || null,
+        waluta: values.waluta,
+        metoda: values.metoda || null,
+        status: values.status,
+        notatki: values.notatki || null,
       },
     ]);
 
@@ -99,7 +94,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
         description: 'Płatność została dodana',
       });
       setDialogOpen(false);
-      setFormData({
+      form.reset({
         data_platnosci: format(new Date(), 'yyyy-MM-dd'),
         kwota: '',
         waluta: 'PLN',
@@ -157,84 +152,107 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
             <DialogHeader>
               <DialogTitle>Nowa płatność - {studentName}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="data_platnosci">Data płatności *</Label>
-                  <Input
-                    id="data_platnosci"
-                    type="date"
-                    value={formData.data_platnosci}
-                    onChange={(e) => setFormData({ ...formData, data_platnosci: e.target.value })}
-                    required
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="data_platnosci"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data płatności *</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="kwota"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kwota *</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="kwota">Kwota *</Label>
-                  <Input
-                    id="kwota"
-                    type="number"
-                    step="0.01"
-                    value={formData.kwota}
-                    onChange={(e) => setFormData({ ...formData, kwota: e.target.value })}
-                    required
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="metoda"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Metoda płatności</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Wybierz metodę" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="gotówka">Gotówka</SelectItem>
+                            <SelectItem value="przelew">Przelew</SelectItem>
+                            <SelectItem value="blik">BLIK</SelectItem>
+                            <SelectItem value="karta">Karta</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="oczekuje">Oczekuje</SelectItem>
+                            <SelectItem value="zapłacone">Zapłacone</SelectItem>
+                            <SelectItem value="zaległe">Zaległe</SelectItem>
+                            <SelectItem value="anulowane">Anulowane</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="metoda">Metoda płatności</Label>
-                  <Select
-                    value={formData.metoda}
-                    onValueChange={(value) => setFormData({ ...formData, metoda: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wybierz metodę" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gotówka">Gotówka</SelectItem>
-                      <SelectItem value="przelew">Przelew</SelectItem>
-                      <SelectItem value="blik">BLIK</SelectItem>
-                      <SelectItem value="karta">Karta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="status">Status *</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="oczekuje">Oczekuje</SelectItem>
-                      <SelectItem value="zapłacone">Zapłacone</SelectItem>
-                      <SelectItem value="zaległe">Zaległe</SelectItem>
-                      <SelectItem value="anulowane">Anulowane</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="notatki">Notatki</Label>
-                <Textarea
-                  id="notatki"
-                  value={formData.notatki}
-                  onChange={(e) => setFormData({ ...formData, notatki: e.target.value })}
-                  rows={3}
+                <FormField
+                  control={form.control}
+                  name="notatki"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notatki</FormLabel>
+                      <FormControl>
+                        <Textarea rows={3} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Anuluj
-                </Button>
-                <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                  Dodaj płatność
-                </Button>
-              </div>
-            </form>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Anuluj
+                  </Button>
+                  <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                    Dodaj płatność
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

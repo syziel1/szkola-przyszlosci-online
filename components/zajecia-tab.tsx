@@ -1,19 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, Calendar, Clock } from 'lucide-react';
 import { format, addHours, addWeeks } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { useClasses } from '@/hooks/use-classes';
+import { classSchema, type ClassFormData } from '@/schemas/class.schema';
 
 interface ZajeciaTabProps {
   studentId: string;
@@ -56,30 +59,33 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
     return format(endDate, 'HH:mm');
   };
 
-  const [formData, setFormData] = useState({
-    subject: 'matematyka' as 'matematyka' | 'fizyka' | 'informatyka',
-    date: getTodayDate(),
-    start_time: getDefaultStartTime(),
-    end_time: getDefaultEndTime(getDefaultStartTime()),
-    end_at: '',
-    temat: '',
-    zrozumienie: '',
-    trudnosci: '',
-    praca_domowa: '',
-    status_pd: 'brak' as 'brak' | 'zadane' | 'oddane' | 'poprawa',
-    is_recurring: false,
-    recurring_weeks: '4',
+  const form = useForm<ClassFormData>({
+    resolver: zodResolver(classSchema),
+    defaultValues: {
+      subject: 'matematyka',
+      date: getTodayDate(),
+      start_time: getDefaultStartTime(),
+      end_time: getDefaultEndTime(getDefaultStartTime()),
+      temat: '',
+      zrozumienie: '',
+      trudnosci: '',
+      praca_domowa: '',
+      status_pd: 'brak',
+      is_recurring: false,
+      recurring_weeks: '4',
+    },
   });
 
-  // Update end time when start time changes
-  const handleStartTimeChange = (startTime: string) => {
-    const endTime = getDefaultEndTime(startTime);
-    setFormData(prev => ({
-      ...prev,
-      start_time: startTime,
-      end_time: endTime
-    }));
-  };
+  // Watch for start_time changes to update end_time
+  const startTime = form.watch('start_time');
+  const isRecurring = form.watch('is_recurring');
+
+  useEffect(() => {
+    if (startTime) {
+      const endTime = getDefaultEndTime(startTime);
+      form.setValue('end_time', endTime);
+    }
+  }, [startTime]);
 
   // Generate time options in 15-minute intervals
   const generateTimeOptions = () => {
@@ -94,45 +100,33 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
     return options;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: ClassFormData) => {
     // Combine date and time for start_at
-    const startDateTime = `${formData.date}T${formData.start_time}:00`;
-    const endDateTime = formData.end_time ? `${formData.date}T${formData.end_time}:00` : null;
+    const startDateTime = `${values.date}T${values.start_time}:00`;
+    const endDateTime = values.end_time ? `${values.date}T${values.end_time}:00` : null;
 
     try {
-      if (formData.is_recurring) {
+      if (values.is_recurring) {
         // Create recurring classes
-        const weeksCount = parseInt(formData.recurring_weeks);
-        
-        // Validate weeks count
-        if (isNaN(weeksCount) || weeksCount <= 0 || weeksCount > 52) {
-          toast({
-            title: 'Błąd',
-            description: 'Liczba tygodni musi być liczbą od 1 do 52',
-            variant: 'destructive',
-          });
-          return;
-        }
+        const weeksCount = parseInt(values.recurring_weeks || '0');
         
         const promises = [];
         
         for (let week = 0; week < weeksCount; week++) {
-          const weekDate = addWeeks(new Date(formData.date), week);
-          const weekStartDateTime = `${format(weekDate, 'yyyy-MM-dd')}T${formData.start_time}:00`;
-          const weekEndDateTime = formData.end_time ? `${format(weekDate, 'yyyy-MM-dd')}T${formData.end_time}:00` : null;
+          const weekDate = addWeeks(new Date(values.date), week);
+          const weekStartDateTime = `${format(weekDate, 'yyyy-MM-dd')}T${values.start_time}:00`;
+          const weekEndDateTime = values.end_time ? `${format(weekDate, 'yyyy-MM-dd')}T${values.end_time}:00` : null;
           
           promises.push(addClass({
             student_id: studentId,
-            subject: formData.subject,
+            subject: values.subject,
             start_at: weekStartDateTime,
             end_at: weekEndDateTime,
-            temat: formData.temat || null,
-            zrozumienie: formData.zrozumienie ? parseInt(formData.zrozumienie) : null,
-            trudnosci: formData.trudnosci || null,
-            praca_domowa: formData.praca_domowa || null,
-            status_pd: formData.status_pd,
+            temat: values.temat || null,
+            zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
+            trudnosci: values.trudnosci || null,
+            praca_domowa: values.praca_domowa || null,
+            status_pd: values.status_pd,
           }));
         }
         
@@ -156,14 +150,14 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
         // Create single class
         const { error } = await addClass({
           student_id: studentId,
-          subject: formData.subject,
+          subject: values.subject,
           start_at: startDateTime,
           end_at: endDateTime,
-          temat: formData.temat || null,
-          zrozumienie: formData.zrozumienie ? parseInt(formData.zrozumienie) : null,
-          trudnosci: formData.trudnosci || null,
-          praca_domowa: formData.praca_domowa || null,
-          status_pd: formData.status_pd,
+          temat: values.temat || null,
+          zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
+          trudnosci: values.trudnosci || null,
+          praca_domowa: values.praca_domowa || null,
+          status_pd: values.status_pd,
         });
 
         if (error) {
@@ -183,12 +177,11 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
 
       // Reset form and close dialog
       setDialogOpen(false);
-      setFormData({
+      form.reset({
         subject: 'matematyka',
         date: getTodayDate(),
         start_time: getDefaultStartTime(),
         end_time: getDefaultEndTime(getDefaultStartTime()),
-        end_at: '',
         temat: '',
         zrozumienie: '',
         trudnosci: '',
@@ -234,174 +227,235 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
             <DialogHeader>
               <DialogTitle>Nowe zajęcia - {studentName}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="subject">Przedmiot *</Label>
-                <Select
-                  value={formData.subject}
-                  onValueChange={(value: any) => setFormData({ ...formData, subject: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="matematyka">Matematyka</SelectItem>
-                    <SelectItem value="fizyka">Fizyka</SelectItem>
-                    <SelectItem value="informatyka">Informatyka</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="date">Data zajęć *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Przedmiot *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="matematyka">Matematyka</SelectItem>
+                          <SelectItem value="fizyka">Fizyka</SelectItem>
+                          <SelectItem value="informatyka">Informatyka</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_time">Godzina rozpoczęcia *</Label>
-                  <Select
-                    value={formData.start_time}
-                    onValueChange={handleStartTimeChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {generateTimeOptions().map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="end_time">Godzina zakończenia</Label>
-                  <Select
-                    value={formData.end_time}
-                    onValueChange={(value) => setFormData({ ...formData, end_time: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {generateTimeOptions().map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_recurring"
-                    checked={formData.is_recurring}
-                    onCheckedChange={(checked) => 
-                      setFormData({ ...formData, is_recurring: checked as boolean })
-                    }
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data zajęć *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="start_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Godzina rozpoczęcia *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60">
+                            {generateTimeOptions().map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Label htmlFor="is_recurring">Zajęcia cykliczne (co tydzień)</Label>
+                  <FormField
+                    control={form.control}
+                    name="end_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Godzina zakończenia</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60">
+                            {generateTimeOptions().map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                {formData.is_recurring && (
-                  <div className="ml-6">
-                    <Label htmlFor="recurring_weeks">Liczba tygodni</Label>
-                    <Select
-                      value={formData.recurring_weeks}
-                      onValueChange={(value) => setFormData({ ...formData, recurring_weeks: value })}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2">2 tygodnie</SelectItem>
-                        <SelectItem value="4">4 tygodnie</SelectItem>
-                        <SelectItem value="6">6 tygodni</SelectItem>
-                        <SelectItem value="8">8 tygodni</SelectItem>
-                        <SelectItem value="12">12 tygodni</SelectItem>
-                        <SelectItem value="16">16 tygodni</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="temat">Temat zajęć</Label>
-                <Input
-                  id="temat"
-                  value={formData.temat}
-                  onChange={(e) => setFormData({ ...formData, temat: e.target.value })}
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="is_recurring"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Zajęcia cykliczne (co tydzień)</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  {isRecurring && (
+                    <FormField
+                      control={form.control}
+                      name="recurring_weeks"
+                      render={({ field }) => (
+                        <FormItem className="ml-6">
+                          <FormLabel>Liczba tygodni</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="2">2 tygodnie</SelectItem>
+                              <SelectItem value="4">4 tygodnie</SelectItem>
+                              <SelectItem value="6">6 tygodni</SelectItem>
+                              <SelectItem value="8">8 tygodni</SelectItem>
+                              <SelectItem value="12">12 tygodni</SelectItem>
+                              <SelectItem value="16">16 tygodni</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+                <FormField
+                  control={form.control}
+                  name="temat"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temat zajęć</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="zrozumienie">Poziom zrozumienia (1-5)</Label>
-                <Select
-                  value={formData.zrozumienie}
-                  onValueChange={(value) => setFormData({ ...formData, zrozumienie: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Wybierz poziom" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 - Bardzo słabe</SelectItem>
-                    <SelectItem value="2">2 - Słabe</SelectItem>
-                    <SelectItem value="3">3 - Średnie</SelectItem>
-                    <SelectItem value="4">4 - Dobre</SelectItem>
-                    <SelectItem value="5">5 - Bardzo dobre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="trudnosci">Trudności</Label>
-                <Textarea
-                  id="trudnosci"
-                  value={formData.trudnosci}
-                  onChange={(e) => setFormData({ ...formData, trudnosci: e.target.value })}
-                  rows={2}
+                <FormField
+                  control={form.control}
+                  name="zrozumienie"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Poziom zrozumienia (1-5)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Wybierz poziom" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">1 - Bardzo słabe</SelectItem>
+                          <SelectItem value="2">2 - Słabe</SelectItem>
+                          <SelectItem value="3">3 - Średnie</SelectItem>
+                          <SelectItem value="4">4 - Dobre</SelectItem>
+                          <SelectItem value="5">5 - Bardzo dobre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="praca_domowa">Praca domowa</Label>
-                <Textarea
-                  id="praca_domowa"
-                  value={formData.praca_domowa}
-                  onChange={(e) => setFormData({ ...formData, praca_domowa: e.target.value })}
-                  rows={2}
+                <FormField
+                  control={form.control}
+                  name="trudnosci"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trudności</FormLabel>
+                      <FormControl>
+                        <Textarea rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="status_pd">Status pracy domowej</Label>
-                <Select
-                  value={formData.status_pd}
-                  onValueChange={(value: any) => setFormData({ ...formData, status_pd: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="brak">Brak</SelectItem>
-                    <SelectItem value="zadane">Zadane</SelectItem>
-                    <SelectItem value="oddane">Oddane</SelectItem>
-                    <SelectItem value="poprawa">Poprawa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Anuluj
-                </Button>
-                <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                  {formData.is_recurring ? `Dodaj ${formData.recurring_weeks} zajęć` : 'Dodaj zajęcia'}
-                </Button>
-              </div>
-            </form>
+                <FormField
+                  control={form.control}
+                  name="praca_domowa"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Praca domowa</FormLabel>
+                      <FormControl>
+                        <Textarea rows={2} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="status_pd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status pracy domowej</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="brak">Brak</SelectItem>
+                          <SelectItem value="zadane">Zadane</SelectItem>
+                          <SelectItem value="oddane">Oddane</SelectItem>
+                          <SelectItem value="poprawa">Poprawa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Anuluj
+                  </Button>
+                  <Button type="submit" className="bg-green-500 hover:bg-green-600">
+                    {isRecurring ? `Dodaj ${form.watch('recurring_weeks')} zajęć` : 'Dodaj zajęcia'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
