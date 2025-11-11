@@ -79,13 +79,14 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
   // Watch for start_time changes to update end_time
   const startTime = form.watch('start_time');
   const isRecurring = form.watch('is_recurring');
+  const { setValue } = form;
 
   useEffect(() => {
     if (startTime) {
       const endTime = getDefaultEndTime(startTime);
-      form.setValue('end_time', endTime);
+      setValue('end_time', endTime);
     }
-  }, [startTime, form]);
+  }, [startTime, setValue]);
 
   // Generate time options in 15-minute intervals
   const generateTimeOptions = () => {
