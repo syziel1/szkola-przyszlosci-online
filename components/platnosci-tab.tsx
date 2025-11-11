@@ -187,7 +187,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Metoda płatności</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Wybierz metodę" />
