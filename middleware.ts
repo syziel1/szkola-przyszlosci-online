@@ -34,7 +34,7 @@ export function middleware(request: NextRequest) {
     // Whitelist specific image hosts (removed insecure 'https:')
     `img-src 'self' data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com/s2/favicons https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com`,
     // Whitelist specific font hosts (removed insecure 'https:')
-    `font-src 'self' data: https://fonts.gstatic.com`,
+    `font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com`,
     // Whitelist Supabase connections
     `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
     "frame-ancestors 'self'",
