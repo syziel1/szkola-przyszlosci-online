@@ -380,7 +380,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Poziom zrozumienia (1-5)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Wybierz poziom" />
