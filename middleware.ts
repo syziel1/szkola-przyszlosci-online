@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!supabaseUrl) {
   // This will stop the server on startup if the variable is missing
-  throw new Error('CRITICAL_ERROR: Missing NEXT_PUBLIC_SUPABASE_URL');
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
 }
 const supabaseHost = new URL(supabaseUrl).hostname;
 
@@ -32,7 +32,7 @@ export function middleware(request: NextRequest) {
       process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
     }`,
     // Whitelist specific image hosts (removed insecure 'https:')
-    `img-src 'self' data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com`,
+    `img-src 'self' data: blob: https://${supabaseHost} https://image.thum.io https://www.google.com/s2/favicons https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com`,
     // Whitelist specific font hosts (removed insecure 'https:')
     `font-src 'self' data: https://fonts.gstatic.com`,
     // Whitelist Supabase connections
@@ -60,8 +60,6 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  // Set X-XSS-Protection to '1; mode=block' for older browsers
-  response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
 

@@ -4,7 +4,7 @@
 // 1. Throw an error at build time if the URL is not set.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!supabaseUrl) {
-  throw new Error("CRITICAL_ERROR: Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
+  throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
 }
 // 2. Robustly parse the hostname using the URL API.
 const supabaseHost = new URL(supabaseUrl).hostname;
@@ -19,17 +19,12 @@ const nextConfig = {
   compress: true,
   productionBrowserSourceMaps: false, // Disable source maps in production
 
-  // ----- 1) Enforce ESLint during builds -----
-  eslint: {
-    ignoreDuringBuilds: false, // Fail build on lint errors
-  },
-
-  // ----- 2) Enforce TypeScript errors -----
+  // ----- Enforce TypeScript errors -----
   typescript: {
     ignoreBuildErrors: false,
   },
 
-  // ----- 3) Optimize Package Imports -----
+  // ----- Optimize Package Imports -----
   experimental: {
     optimizePackageImports: [
       '@supabase/supabase-js',
@@ -37,7 +32,7 @@ const nextConfig = {
     ],
   },
 
-  // ----- 4) Allowed Remote Images (for next/image) -----
+  // ----- Allowed Remote Images (for next/image) -----
   images: {
     remotePatterns: [
       // Supabase:
@@ -48,7 +43,7 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.gravatar.com' },
       // Image providers from app/page.tsx:
       { protocol: 'https', hostname: 'image.thum.io' },
-      { protocol: 'https', hostname: 'www.google.com' },
+      { protocol: 'https', hostname: 'www.google.com', pathname: '/s2/favicons' },
     ],
   },
 };
