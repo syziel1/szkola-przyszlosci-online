@@ -44,7 +44,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
       data_platnosci: format(new Date(), 'yyyy-MM-dd'),
       kwota: '',
       waluta: 'PLN',
-      metoda: '',
+      metoda: undefined,
       status: 'oczekuje',
       notatki: '',
     },
@@ -98,7 +98,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
         data_platnosci: format(new Date(), 'yyyy-MM-dd'),
         kwota: '',
         waluta: 'PLN',
-        metoda: '',
+        metoda: undefined,
         status: 'oczekuje',
         notatki: '',
       });
