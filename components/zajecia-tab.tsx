@@ -451,7 +451,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                     Anuluj
                   </Button>
                   <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                    {isRecurring ? `Dodaj ${form.watch('recurring_weeks')} zajęć` : 'Dodaj zajęcia'}
+                    {isRecurring ? `Dodaj ${form.watch('recurring_weeks') || '4'} zajęć` : 'Dodaj zajęcia'}
                   </Button>
                 </div>
               </form>
