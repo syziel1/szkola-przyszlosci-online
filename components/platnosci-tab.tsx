@@ -68,13 +68,11 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
   };
 
   const handleSubmit = async (values: PaymentFormData) => {
-    const kwotaValue = parseFloat(values.kwota);
-
     const { error } = await supabase.from('platnosci').insert([
       {
         student_id: studentId,
         data_platnosci: values.data_platnosci,
-        kwota: kwotaValue,
+        kwota: values.kwota,
         waluta: values.waluta,
         metoda: values.metoda || null,
         status: values.status,
@@ -96,7 +94,7 @@ export function PlatnosciTab({ studentId, studentName }: PlatnosciTabProps) {
       setDialogOpen(false);
       form.reset({
         data_platnosci: format(new Date(), 'yyyy-MM-dd'),
-        kwota: '',
+        kwota: 0,
         waluta: 'PLN',
         metoda: '',
         status: 'oczekuje',
