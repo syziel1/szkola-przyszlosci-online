@@ -63,9 +63,7 @@ export function middleware(request: NextRequest) {
       process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
     }`,
     // Add new inline style hashes AND Google Fonts CSS host
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com ${INLINE_STYLE_HASHES.join(' ')} ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
-    }`,
+    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com ${INLINE_STYLE_HASHES.join(' ')}`,
     // Add all required image hosts (FIXED per review)
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com/s2/favicons/**`,
     // Add Google Font *file* host (FIXED per review)
