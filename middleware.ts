@@ -50,7 +50,7 @@ export function middleware(request: NextRequest) {
       process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
     }`,
     // Whitelist all image hosts from next.config.js (FIXED per review)
-    `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com/s2/favicons/**`,
+    `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
     // Whitelist specific font hosts
     `font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com`,
     `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
