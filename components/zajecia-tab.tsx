@@ -67,7 +67,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
       start_time: getDefaultStartTime(),
       end_time: getDefaultEndTime(getDefaultStartTime()),
       temat: '',
-      zrozumienie: undefined,
       trudnosci: '',
       praca_domowa: '',
       status_pd: 'brak',
@@ -124,7 +123,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
             start_at: weekStartDateTime,
             end_at: weekEndDateTime,
             temat: values.temat || null,
-            zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
             trudnosci: values.trudnosci || null,
             praca_domowa: values.praca_domowa || null,
             status_pd: values.status_pd,
@@ -155,7 +153,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
           start_at: startDateTime,
           end_at: endDateTime,
           temat: values.temat || null,
-          zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
           trudnosci: values.trudnosci || null,
           praca_domowa: values.praca_domowa || null,
           status_pd: values.status_pd,
@@ -184,7 +181,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
         start_time: getDefaultStartTime(),
         end_time: getDefaultEndTime(getDefaultStartTime()),
         temat: '',
-        zrozumienie: undefined,
         trudnosci: '',
         praca_domowa: '',
         status_pd: 'brak',
@@ -376,30 +372,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="zrozumienie"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Poziom zrozumienia (1-5)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || undefined}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Wybierz poziom" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">1 - Bardzo słabe</SelectItem>
-                          <SelectItem value="2">2 - Słabe</SelectItem>
-                          <SelectItem value="3">3 - Średnie</SelectItem>
-                          <SelectItem value="4">4 - Dobre</SelectItem>
-                          <SelectItem value="5">5 - Bardzo dobre</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="trudnosci"
                   render={({ field }) => (
                     <FormItem>
@@ -479,11 +451,6 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                       <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getSubjectColor(zajecie.subject)}`}>
                         {zajecie.subject}
                       </span>
-                      {zajecie.zrozumienie && (
-                        <span className="text-sm text-gray-600">
-                          Zrozumienie: {zajecie.zrozumienie}/5
-                        </span>
-                      )}
                     </div>
                     {zajecie.temat && (
                       <p className="font-medium text-gray-900 mb-2">{zajecie.temat}</p>

@@ -44,7 +44,6 @@ export type Database = {
           start_at: string;
           end_at: string | null;
           temat: string | null;
-          zrozumienie: number | null;
           trudnosci: string | null;
           praca_domowa: string | null;
           status_pd: Database['public']['Enums']['homework_status_enum'];

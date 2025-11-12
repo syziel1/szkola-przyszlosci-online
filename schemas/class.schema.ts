@@ -16,9 +16,7 @@ export const classSchema = z.object({
   end_time: z.string().optional(),
   
   temat: z.string().optional(),
-  
-  zrozumienie: z.coerce.number().min(1).max(5).optional(),
-  
+
   trudnosci: z.string().optional(),
   
   praca_domowa: z.string().optional(),
