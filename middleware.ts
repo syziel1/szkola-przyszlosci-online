@@ -25,9 +25,9 @@ const INLINE_STYLE_HASHES = [
   "'sha256-mQkImBcmRiGtr/qRpLuiFfNkcVF/NthFAxT7hxB7xAU='",
   "'sha256-zCeZejzceXzljeEjtJxO0pQ0OpoO0u3E/es4eQU/txs='",
   "'sha256-0pG0DCH1GBbEnvsjQTwl6bJVEInGDIzZJv9Kl/gQ0pE='",
-  "'sha256-fUPzcrPgOkq9/MrTWBg/aU0eNOpHog7PgucFe7*U='", // Uwaga: skopiowałem ten hash z błędu, ale może być ucięty. Sprawdź w konsoli.
+  "'sha256-fUPzcrPgOkq9/MrTWBg/aU0eNOpHog7PgucFe7*U='", // NOTE: This hash was copied from a browser error and may be truncated. Please verify the full hash in the console.
   "'sha256-tU5S0/zuEU/pUf/JUQvUVc/purJalUD7Szh5NsHzxrk='",
-  "'sha256-HsohvsW4swvN/b5SBsEbhTDphTfNnxbst/qU9B*gM='", // Uwaga: skopiowałem ten hash z błędu, ale może być ucięty. Sprawdź w konsoli.
+  "'sha256-HsohvsW4swvN/b5SBsEbhTDphTfNnxbst/qU9B*gM='", // NOTE: This hash was copied from a browser error and may be truncated. Please verify the full hash in the console.
 ];
 
 export function middleware(request: NextRequest) {
