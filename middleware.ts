@@ -18,7 +18,7 @@ function buildCSP(nonce: string) {
     
     // 'unsafe-inline' jest SZYBKIM FIXEM na atrybuty style="...".
     // Długoterminowo należy je usunąć i zastąpić klasami.
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com 'unsafe-inline'`,
+    `style-src 'self' https://fonts.googleapis.com 'unsafe-inline'`, // teraz bez 'nonce-${nonce}'
     
     // Poprawione hosty dla obrazków i fontów
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
