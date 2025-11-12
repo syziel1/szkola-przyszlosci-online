@@ -7,6 +7,8 @@ import { Toaster } from '@/components/ui/toaster'
 import { NonceProvider } from '@/lib/nonce-context'
 import { NoncedScript } from '@/components/nonced-script'
 
+export const dynamic = 'force-dynamic'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
