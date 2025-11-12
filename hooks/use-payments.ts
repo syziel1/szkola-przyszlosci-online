@@ -68,7 +68,7 @@ export function usePayments(studentId?: string) {
 
       const { data, error: insertError } = await supabase
         .from('platnosci')
-        .insert({ ...payment, created_by: userData.user.id })
+        .insert(payment)
         .select()
         .single();
 

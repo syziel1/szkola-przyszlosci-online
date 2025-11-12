@@ -62,7 +62,7 @@ export function useStudents() {
 
       const { data, error: insertError } = await supabase
         .from('uczniowie')
-        .insert({ ...student, created_by: userData.user.id })
+        .insert(student)
         .select()
         .single();
 

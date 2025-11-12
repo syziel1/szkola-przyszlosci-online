@@ -124,7 +124,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
             start_at: weekStartDateTime,
             end_at: weekEndDateTime,
             temat: values.temat || null,
-            zrozumienie: values.zrozumienie ?? null,
+            zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
             trudnosci: values.trudnosci || null,
             praca_domowa: values.praca_domowa || null,
             status_pd: values.status_pd,
@@ -155,7 +155,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
           start_at: startDateTime,
           end_at: endDateTime,
           temat: values.temat || null,
-          zrozumienie: values.zrozumienie ?? null,
+          zrozumienie: values.zrozumienie ? parseInt(values.zrozumienie) : null,
           trudnosci: values.trudnosci || null,
           praca_domowa: values.praca_domowa || null,
           status_pd: values.status_pd,
@@ -380,10 +380,7 @@ export function ZajeciaTab({ studentId, studentName }: ZajeciaTabProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Poziom zrozumienia (1-5)</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} 
-                        value={field.value?.toString() ?? ''}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Wybierz poziom" />

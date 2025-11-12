@@ -3,9 +3,35 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
+import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const projects = [
+    {
+      name: 'Edu Future',
+      url: 'https://edu-future.online/',
+      description: 'Platforma edukacyjna budująca kompetencje przyszłości.'
+    },
+    {
+      name: 'SkillsCan AI',
+      url: 'https://skillscanai.online/',
+      description: 'Narzędzia AI do rozwoju umiejętności i automatyzacji.'
+    },
+    {
+      name: 'Zrozoom AI',
+      url: 'https://www.zrozoomai.pl/',
+      description: 'Warsztaty i wiedza o sztucznej inteligencji.'
+    },
+    {
+      name: 'Matma Base44',
+      url: 'https://matma.base44.app/',
+      description: 'Ćwiczenia i materiały z matematyki online.'
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
