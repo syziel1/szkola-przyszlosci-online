@@ -12,7 +12,8 @@ function buildCSP(nonce: string) {
   const cspDirectives = [
     "default-src 'self'",
     // 'strict-dynamic' ufa skryptom ładowanym przez skrypty z 'nonce'
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
+    `script-src 'self' 'nonce-${nonce}' https://szkolaprzyszlosci.online // 'strict-dynamic'
+    ${
       process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
     }`,
     
