@@ -105,7 +105,7 @@ export default function Home() {
                       <a
                         href={p.url}
                         target="_blank"
-                        rel="noopener noreferrer" // bezpieczny 'rel'
+                        rel="noopener noreferrer" // secure rel attribute
                         className="text-xs text-blue-600 hover:underline break-all"
                       >
                         {p.url.replace('https://', '')}
