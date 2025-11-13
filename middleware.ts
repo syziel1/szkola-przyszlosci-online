@@ -19,24 +19,28 @@ export function middleware(request: NextRequest) {
   request.headers.set('X-Nonce', nonce);
 
   // 4. Define the secure Content Security Policy (CSP)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   const cspDirectives = [
     "default-src 'self'",
     // Use the nonce for scripts, enable 'strict-dynamic'
-    // 'unsafe-eval' is kept only for development HMR
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''
+    // 'unsafe-eval' and 'unsafe-inline' are kept for development HMR and WebContainer compatibility
+    `script-src 'self' 'nonce-${nonce}' ${
+      isDevelopment ? "'unsafe-eval' 'unsafe-inline'" : "'strict-dynamic'"
     }`,
     // Use the nonce for styles
-    // 'unsafe-inline' is kept only for development HMR
+    // 'unsafe-inline' is kept for development HMR
     `style-src 'self' 'nonce-${nonce}' ${
-      process.env.NODE_ENV === 'development' ? "'unsafe-inline'" : ''
+      isDevelopment ? "'unsafe-inline'" : ''
     }`,
-    // Whitelist specific image hosts (removed insecure 'https:')
+    // Whitelist specific image hosts
     `img-src 'self' data: blob: https://${supabaseHost} https://avatars.githubusercontent.com https://gravatar.com https://*.gravatar.com https://image.thum.io https://www.google.com`,
-    // Whitelist specific font hosts (removed insecure 'https:')
+    // Whitelist specific font hosts
     `font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com`,
-    // Whitelist Supabase connections
-    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
+    // Whitelist Supabase connections and local development
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} ${
+      isDevelopment ? 'ws://localhost:* ws://*.local-credentialless.webcontainer-api.io http://localhost:* https://*.local-credentialless.webcontainer-api.io' : ''
+    }`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
