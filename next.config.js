@@ -11,7 +11,6 @@ const supabaseHost = new URL(supabaseUrl).hostname;
 const nextConfig = {
   // ----- Base Configuration -----
   reactStrictMode: true,
-  swcMinify: true,
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
